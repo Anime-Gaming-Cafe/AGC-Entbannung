@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using AGC_Entbannungssystem.Services;
+using AGC_Entbannungssystem.Tasks;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
@@ -102,10 +103,19 @@ internal sealed class Program
         CurrentApplicationData.Client = client;
         CurrentApplicationData.BotApplication = client.CurrentUser;
         
+        _ = RunTasks(client);
 
         
         await Task.Delay(-1);
     }
+    
+    private static async Task RunTasks(DiscordClient client)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(20));
+        _ = CheckTeamRole.Run(client);
+    }
+    
+    
     
     private static async Task Discord_Ready(DiscordClient sender, ReadyEventArgs e)
     {
