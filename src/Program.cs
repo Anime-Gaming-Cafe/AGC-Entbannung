@@ -1,0 +1,146 @@
+﻿using System.Diagnostics;
+using System.Reflection;
+using AGC_Entbannungssystem.Services;
+using DisCatSharp;
+using DisCatSharp.ApplicationCommands;
+using DisCatSharp.ApplicationCommands.Attributes;
+using DisCatSharp.ApplicationCommands.EventArgs;
+using DisCatSharp.ApplicationCommands.Exceptions;
+using DisCatSharp.Entities;
+using DisCatSharp.Enums;
+using DisCatSharp.EventArgs;
+using DisCatSharp.Exceptions;
+using DisCatSharp.Interactivity;
+using DisCatSharp.Interactivity.Enums;
+using DisCatSharp.Interactivity.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
+
+
+namespace AGC_Entbannungssystem;
+
+public sealed class CurrentApplicationData
+{
+    public static DiscordClient? Client { get; set; }
+    public static DiscordUser? BotApplication { get; set; }
+}
+
+internal sealed class Program
+{
+    private static void Main(string[] args)
+    {
+        MainAsync().GetAwaiter().GetResult();
+    }
+
+    private static async Task MainAsync()
+    {
+        var logger = Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .CreateLogger();
+        logger.Information("Starting AGC_Entbannungssystem...");
+        
+        string DcApiToken = "";
+        try
+        {
+            DcApiToken = BotConfigurator.GetConfig("MainConfig", "Discord_Token");
+        }
+        catch
+        {
+            logger.Fatal("Discord Token not found in config. Please add the Token.");
+            Console.ReadKey();
+            Environment.Exit(41);
+        }
+        
+        IServiceProvider serviceProvider = new ServiceCollection()
+            .AddLogging(lb => lb.AddSerilog())
+            .BuildServiceProvider();
+
+        var client = new DiscordClient(new DiscordConfiguration
+        {
+            Token = DcApiToken,
+            TokenType = TokenType.Bot,
+            AutoReconnect = true,
+            Intents = DiscordIntents.All,
+            DeveloperUserId = GlobalProperties.BotOwnerId,
+            ServiceProvider = serviceProvider
+        });
+        
+        client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
+        client.ClientErrored += Discord_ClientErrored;
+        client.UseInteractivity(new InteractivityConfiguration
+        {
+            Timeout = TimeSpan.FromMinutes(5),
+            AckPaginationButtons = true,
+            PaginationBehaviour = PaginationBehaviour.Ignore
+        });
+        
+        var slash = client.UseApplicationCommands(new ApplicationCommandsConfiguration
+        {
+            ServiceProvider = serviceProvider,
+            EnableDefaultHelp = false
+        });
+        
+        slash.SlashCommandErrored += Discord_SlashCommandErrored;
+        ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
+        slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
+
+        await client.ConnectAsync();
+        
+        CurrentApplicationData.Client = client;
+        CurrentApplicationData.BotApplication = client.CurrentUser;
+        
+        await Task.Delay(-1);
+    }
+    
+    private static async Task Discord_SlashCommandErrored(ApplicationCommandsExtension sender,
+        SlashCommandErrorEventArgs e)
+    {
+        if (e.Exception is SlashExecutionChecksFailedException)
+        {
+            var ex = (SlashExecutionChecksFailedException)e.Exception;
+            if (ex.FailedChecks.Any(x => x is ApplicationCommandRequireUserPermissionsAttribute))
+            {
+                await e.Context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("Du hast kei").AsEphemeral());
+                e.Handled = true;
+                return;
+            }
+
+            e.Handled = true;
+        }
+    }
+    
+    
+    private static Task Discord_ClientErrored(DiscordClient sender, ClientErrorEventArgs e)
+    {
+        if (e.Exception is SlashExecutionChecksFailedException)
+        {
+            e.Handled = true;
+            return Task.CompletedTask;
+        }
+
+        if (e.Exception is NotFoundException)
+        {
+            e.Handled = true;
+            return Task.CompletedTask;
+        }
+
+        if (e.Exception is BadRequestException)
+        {
+            e.Handled = true;
+            return Task.CompletedTask;
+        }
+
+        sender.Logger.LogError($"Exception occured: {e.Exception.GetType()}: {e.Exception.Message}");
+        sender.Logger.LogError($"Stacktrace: {e.Exception.GetType()}: {e.Exception.StackTrace}");
+        return Task.CompletedTask;
+    }
+    
+}
+
+public static class GlobalProperties
+{
+    public static ulong BotOwnerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "BotOwnerId"));
+}
