@@ -36,7 +36,7 @@ internal sealed class Program
     private static async Task MainAsync()
     {
         var logger = Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
+            .MinimumLevel.Information() 
             .WriteTo.Console()
             .CreateLogger();
         logger.Information("Starting AGC_Entbannungssystem...");
@@ -53,9 +53,7 @@ internal sealed class Program
             Environment.Exit(41);
         }
         
-        IServiceProvider serviceProvider = new ServiceCollection()
-            .AddLogging(lb => lb.AddSerilog())
-            .BuildServiceProvider();
+        IServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
 
         var client = new DiscordClient(new DiscordConfiguration
         {

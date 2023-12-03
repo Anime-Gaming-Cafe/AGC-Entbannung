@@ -2,7 +2,10 @@
   "MainConfig": {
     "Discord_Token": "TokenHere",
     "BotOwnerId": "YourUserID",
-    "UnbanServerId": "ServerID"
+    "UnbanServerId": "ServerID",
+    "MainServerId": "ServerID",
+    "MainGuildTeamRoleId": "RoleID",
+    "UnbanGuildTeamRoleId": "RoleID"
   },
   "EmbedConfig": {
     "DefaultEmbedColor": "FFFFFF"
