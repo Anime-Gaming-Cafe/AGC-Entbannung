@@ -24,6 +24,7 @@ public sealed class CurrentApplicationData
 {
     public static DiscordClient? Client { get; set; }
     public static DiscordUser? BotApplication { get; set; }
+    public static bool isReady { get; set; } = false;
 }
 
 internal sealed class Program
@@ -36,7 +37,12 @@ internal sealed class Program
     private static async Task MainAsync()
     {
         var logger = Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information() 
+            .MinimumLevel.Debug().Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Heartbeat"))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Updating hash"))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Bucket cleaner task stopped."))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Request for user rate limit"))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("unused bucket"))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Initial request"))
             .WriteTo.Console()
             .CreateLogger();
         logger.Information("Starting AGC_Entbannungssystem...");
@@ -53,7 +59,10 @@ internal sealed class Program
             Environment.Exit(41);
         }
         
-        IServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
+        IServiceProvider serviceProvider = new ServiceCollection().AddLogging(logging =>
+        {
+            logging.AddSerilog(logger);
+        }).BuildServiceProvider();
 
         var client = new DiscordClient(new DiscordConfiguration
         {
@@ -62,10 +71,11 @@ internal sealed class Program
             AutoReconnect = true,
             Intents = DiscordIntents.All,
             DeveloperUserId = GlobalProperties.BotOwnerId,
+            MinimumLogLevel = LogLevel.Debug,
             ServiceProvider = serviceProvider
         });
         
-        client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
+        
         client.ClientErrored += Discord_ClientErrored;
         client.UseInteractivity(new InteractivityConfiguration
         {
@@ -79,17 +89,27 @@ internal sealed class Program
             ServiceProvider = serviceProvider,
             EnableDefaultHelp = false
         });
-        
-        slash.SlashCommandErrored += Discord_SlashCommandErrored;
         ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
         slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
+        client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
+        slash.SlashCommandErrored += Discord_SlashCommandErrored;
+
+        
+        client.Ready += Discord_Ready;
 
         await client.ConnectAsync();
         
         CurrentApplicationData.Client = client;
         CurrentApplicationData.BotApplication = client.CurrentUser;
         
+
+        
         await Task.Delay(-1);
+    }
+    
+    private static async Task Discord_Ready(DiscordClient sender, ReadyEventArgs e)
+    {
+        CurrentApplicationData.isReady = true;
     }
     
     private static async Task Discord_SlashCommandErrored(ApplicationCommandsExtension sender,
@@ -142,7 +162,7 @@ public static class GlobalProperties
 {
     public static ulong BotOwnerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "BotOwnerId"));
     public static ulong UnbanServerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
-    public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildId"));
+    public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainServerId"));
     public static ulong MainGuildTeamRoleId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildTeamRoleId"));
-    public static ulong UnbanServerTeamRoleId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerTeamRoleId"));
+    public static ulong UnbanServerTeamRoleId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"));
 }

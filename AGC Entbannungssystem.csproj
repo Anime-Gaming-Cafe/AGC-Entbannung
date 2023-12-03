@@ -20,7 +20,6 @@
 
     <ItemGroup>
       <Folder Include="src\Commands\" />
-      <Folder Include="src\Eventhandler\" />
     </ItemGroup>
 
 </Project>
