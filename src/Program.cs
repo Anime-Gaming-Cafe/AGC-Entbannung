@@ -42,8 +42,10 @@ internal sealed class Program
             .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Updating hash"))
             .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Bucket cleaner task"))
             .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Request for user rate limit"))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Request for user rate limit bucket"))
             .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("unused bucket"))
             .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Initial request"))
+            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Socket handler suppressed an exception"))
             .WriteTo.Console()
             .CreateLogger();
         logger.Information("Starting AGC_Entbannungssystem...");
