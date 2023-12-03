@@ -1,0 +1,10 @@
+{
+  "MainConfig": {
+    "Discord_Token": "TokenHere",
+    "BotOwnerId": "YourUserID",
+    "UnbanServerId": "ServerID"
+  },
+  "EmbedConfig": {
+    "DefaultEmbedColor": "FFFFFF"
+  }
+}
