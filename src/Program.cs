@@ -143,4 +143,8 @@ internal sealed class Program
 public static class GlobalProperties
 {
     public static ulong BotOwnerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "BotOwnerId"));
+    public static ulong UnbanServerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
+    public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildId"));
+    public static ulong MainGuildTeamRoleId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildTeamRoleId"));
+    public static ulong UnbanServerTeamRoleId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerTeamRoleId"));
 }
