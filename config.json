@@ -9,5 +9,12 @@
   },
   "EmbedConfig": {
     "DefaultEmbedColor": "FFFFFF"
+  },
+  "Database": {
+    "DatabaseName": "DatabaseName",
+    "DatabaseUser": "DatabaseUser",
+    "DatabasePassword": "DatabasePassword",
+    "DatabaseHost": "DatabaseHost",
+    "DatabasePort": "DatabasePort"
   }
 }
