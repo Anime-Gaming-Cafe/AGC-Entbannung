@@ -1,6 +1,10 @@
-﻿using DisCatSharp;
+﻿#region
+
+using DisCatSharp;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Tasks;
 
@@ -20,12 +24,14 @@ public static class CheckTeamRole
                 {
                     if (unbanGuild.Members.TryGetValue(member.Id, out var unbanGuildMember))
                     {
-                        bool hasTeamRoleInMainGuild = member.Roles.Any(x => x.Id == GlobalProperties.MainGuildTeamRoleId);
+                        bool hasTeamRoleInMainGuild =
+                            member.Roles.Any(x => x.Id == GlobalProperties.MainGuildTeamRoleId);
                         bool hasTeamRoleInUnbanGuild = unbanGuildMember.Roles.Any(x => x.Id == unbanTeamRole.Id);
 
                         if (hasTeamRoleInMainGuild && !hasTeamRoleInUnbanGuild)
                         {
-                            await unbanGuildMember.GrantRoleAsync(unbanTeamRole, "Team role obtained in the main guild.");
+                            await unbanGuildMember.GrantRoleAsync(unbanTeamRole,
+                                "Team role obtained in the main guild.");
                         }
                         else if (!hasTeamRoleInMainGuild && hasTeamRoleInUnbanGuild)
                         {

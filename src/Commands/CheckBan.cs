@@ -1,4 +1,6 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
@@ -7,6 +9,8 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.Exceptions;
 
+#endregion
+
 namespace AGC_Entbannungssystem.Commands;
 
 public sealed class CheckBan : ApplicationCommandsModule
@@ -14,7 +18,8 @@ public sealed class CheckBan : ApplicationCommandsModule
     [ApplicationRequireStaffRole]
     [SlashCommand("checkban", "Überprüft, ob und warum ein User auf AGC gebannt ist.")]
     public static async Task CheckBanCommand(InteractionContext ctx,
-        [Option("user", "Der User, der überprüft werden soll.")] DiscordUser user)
+        [Option("user", "Der User, der überprüft werden soll.")]
+        DiscordUser user)
     {
         DiscordGuild mainGuild = await ctx.Client.GetGuildAsync(GlobalProperties.MainGuildId);
         DiscordBan? banentry;
@@ -29,7 +34,7 @@ public sealed class CheckBan : ApplicationCommandsModule
             banentry = null;
             isBanned = false;
         }
-    
+
         string reason = banentry?.Reason ?? "Kein Grund angegeben.";
 
         var embed = new DiscordEmbedBuilder();
@@ -40,7 +45,9 @@ public sealed class CheckBan : ApplicationCommandsModule
         if (!isBanned)
         {
             embed.WithTitle("Der User ist nicht gebannt.");
-            embed.WithDescription("**Nutzer auf AGC:** " + (mainGuild.Members.ContainsKey(user.Id) ? "Ja, seit " + mainGuild.Members[user.Id].JoinedAt.Timestamp() : "Nein"));
+            embed.WithDescription("**Nutzer auf AGC:** " + (mainGuild.Members.ContainsKey(user.Id)
+                ? "Ja, seit " + mainGuild.Members[user.Id].JoinedAt.Timestamp()
+                : "Nein"));
             embed.WithColor(DiscordColor.Green);
         }
         else
@@ -56,5 +63,4 @@ public sealed class CheckBan : ApplicationCommandsModule
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AddEmbed(embed));
     }
-
 }

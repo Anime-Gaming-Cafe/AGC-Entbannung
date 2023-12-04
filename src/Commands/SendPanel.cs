@@ -1,8 +1,12 @@
-﻿using DisCatSharp.ApplicationCommands;
+﻿#region
+
+using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Commands;
 
@@ -15,7 +19,8 @@ public sealed class SendPanel : ApplicationCommandsModule
         var embed1 = new DiscordEmbedBuilder();
         // defer
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Panel gesendet!")).AsEphemeral());
+            new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Panel gesendet!"))
+                .AsEphemeral());
         embed1.WithAuthor(ctx.Guild.Name, iconUrl: ctx.Guild.IconUrl);
         embed1.WithDescription(
             "Hey! Willkommen auf dem Entbannungsserver vom ``Anime & Gaming Café``. Hier kannst du einen Entbannungsantrag stellen, wenn du auf dem Hauptserver gebannt wurdest. Drücke dazu einfach auf den Button unten und folge den Anweisungen. \n\n" +
@@ -27,5 +32,4 @@ public sealed class SendPanel : ApplicationCommandsModule
         mb.WithEmbed(embed1);
         await ctx.Channel.SendMessageAsync(mb);
     }
-
 }

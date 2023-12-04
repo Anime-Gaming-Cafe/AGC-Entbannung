@@ -1,7 +1,11 @@
-﻿using DisCatSharp.ApplicationCommands.Attributes;
+﻿#region
+
+using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Helpers;
 

@@ -1,7 +1,10 @@
-﻿using DisCatSharp.Entities;
-using Newtonsoft.Json.Linq;
-using AGC_Entbannungssystem.Helpers;
+﻿#region
 
+using AGC_Entbannungssystem.Helpers;
+using DisCatSharp.Entities;
+using Newtonsoft.Json.Linq;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Services;
 
@@ -23,7 +26,7 @@ public class BotConfigurator
             return null;
         }
     }
-    
+
     public static string GetConfig(string category, string key)
     {
         JObject config = LoadConfig();
@@ -38,7 +41,7 @@ public class BotConfigurator
             return null;
         }
     }
-    
+
     public static void SetConfig(string category, string key, string value)
     {
         JObject config = LoadConfig();
@@ -52,7 +55,7 @@ public class BotConfigurator
 
         File.WriteAllText("config.json", config.ToString());
     }
-    
+
     public static DiscordColor GetEmbedColor()
     {
         string fallbackColor = "000000";
@@ -80,4 +83,3 @@ public class BotConfigurator
         return new DiscordColor(colorString);
     }
 }
-    
