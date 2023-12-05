@@ -5,7 +5,10 @@
     "UnbanServerId": "ServerID",
     "MainServerId": "ServerID",
     "MainGuildTeamRoleId": "RoleID",
-    "UnbanGuildTeamRoleId": "RoleID",
+    "UnbanGuildTeamRoleId": "RoleID"
+  },
+  "ErrorTracking": {
+    "ErrorTrackingEnabled": "false",
     "DeveloperServerId": "ServerID",
     "DeveloperGuildErrorChannelId": "ChannelID"
   },

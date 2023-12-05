@@ -9,6 +9,7 @@ public static class ErrorReporting
     public static async Task SendErrorToDev(DiscordClient client, DiscordUser user,
         Exception exception)
     {
+        if (!GlobalProperties.ErrorTrackingEnabled) return;
         var botOwner = await client.GetUserAsync(GlobalProperties.BotOwnerId);
         var embed2 = new DiscordEmbedBuilder();
         embed2.WithTitle("Fehler aufgetreten!");

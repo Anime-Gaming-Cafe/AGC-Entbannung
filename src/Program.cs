@@ -177,10 +177,11 @@ public static class GlobalProperties
     public static ulong UnbanServerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
     public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainServerId"));
 
-    public static ulong DevGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "DeveloperServerId"));
-    
+    public static ulong DevGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperServerId"));
+    public static bool ErrorTrackingEnabled { get; } =
+        bool.Parse(BotConfigurator.GetConfig("ErrorTracking", "ErrorTrackingEnabled"));
     public static ulong ErrorTrackingChannelId { get; } =
-        ulong.Parse(BotConfigurator.GetConfig("MainConfig", "DeveloperGuildErrorChannelId"));
+        ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperGuildErrorChannelId"));
     public static ulong MainGuildTeamRoleId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildTeamRoleId"));
 
