@@ -1,7 +1,6 @@
-﻿#region
-
-using AGC_Entbannungssystem.Helpers;
+﻿using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
+using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
@@ -10,8 +9,6 @@ using DisCatSharp.Enums;
 using DisCatSharp.Exceptions;
 using DisCatSharp.Interactivity.Extensions;
 using Npgsql;
-
-#endregion
 
 namespace AGC_Entbannungssystem.Commands;
 
@@ -116,18 +113,19 @@ public class RevokeBan : ApplicationCommandsModule
             string dbuser = BotConfigurator.GetConfig("Database", "DatabaseUser");
             string dbpassword = BotConfigurator.GetConfig("Database", "DatabasePassword");
             string dbhost = BotConfigurator.GetConfig("Database", "DatabaseHost");
-
+            var flagstring = $"Durch Antrag entbannt. Ursprünglicher Banngrund: ``{banreason}`` \n" +
+                             $"Details: Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen","")}``\n Entbannungszeitpunkt: ``{DateTimeOffset.Now.Timestamp()}``";
             await using var dbConnection =
                 new NpgsqlConnection($"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}");
             await dbConnection.OpenAsync();
             await using var dbCommand =
                 new NpgsqlCommand(
-                    "INSERT INTO flags (userid, botid, timestamp, banreason, caseid) VALUES (@userid, @botid, @timestamp, @banreason, @caseid)",
+                    "INSERT INTO flags (userid, punisherid, datum, description, caseid) VALUES (@userid, @botid, @timestamp, @banreason, @caseid)",
                     dbConnection);
             dbCommand.Parameters.AddWithValue("userid", user.Id);
             dbCommand.Parameters.AddWithValue("botid", ctx.Client.CurrentUser.Id);
             dbCommand.Parameters.AddWithValue("timestamp", DateTimeOffset.Now.ToUnixTimeSeconds());
-            dbCommand.Parameters.AddWithValue("banreason", banreason);
+            dbCommand.Parameters.AddWithValue("banreason", flagstring);
             dbCommand.Parameters.AddWithValue("caseid", caseid);
             await dbCommand.ExecuteNonQueryAsync();
             await dbConnection.CloseAsync();
