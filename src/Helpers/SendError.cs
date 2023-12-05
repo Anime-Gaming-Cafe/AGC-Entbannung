@@ -1,6 +1,7 @@
 ﻿using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace AGC_Entbannungssystem.Helpers;
 
@@ -41,6 +42,7 @@ public static class ErrorReporting
         {
             
         }
+        CurrentApplicationData.Client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
         
     }
 }
