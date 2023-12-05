@@ -16,7 +16,6 @@ public class onComponentInteraction : ApplicationCommandsModule
     {
         _ = Task.Run(async () =>
         {
-            Console.WriteLine("Component Interaction created!");
             string cid = e.Interaction.Data.CustomId;
             if (cid == "open_appealticketinfo")
             {
@@ -25,7 +24,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                 bool isBanned = false;
                 try
                 {
-                    Console.WriteLine("Checking if user is banned...");
                     await mainGuild.GetBanAsync(e.User.Id);
                     isBanned = true;
                 }
