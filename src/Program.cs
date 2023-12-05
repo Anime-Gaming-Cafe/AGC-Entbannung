@@ -1,6 +1,7 @@
 ﻿#region
 
 using System.Reflection;
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using AGC_Entbannungssystem.Tasks;
 using DisCatSharp;
@@ -161,6 +162,8 @@ internal sealed class Program
             e.Handled = true;
             return Task.CompletedTask;
         }
+        
+        ErrorReporting.SendErrorToDev(sender, sender.CurrentUser, e.Exception).GetAwaiter().GetResult();
 
         sender.Logger.LogError($"Exception occured: {e.Exception.GetType()}: {e.Exception.Message}");
         sender.Logger.LogError($"Stacktrace: {e.Exception.GetType()}: {e.Exception.StackTrace}");
@@ -174,6 +177,10 @@ public static class GlobalProperties
     public static ulong UnbanServerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
     public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainServerId"));
 
+    public static ulong DevGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "DeveloperServerId"));
+    
+    public static ulong ErrorTrackingChannelId { get; } =
+        ulong.Parse(BotConfigurator.GetConfig("MainConfig", "DeveloperGuildErrorChannelId"));
     public static ulong MainGuildTeamRoleId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildTeamRoleId"));
 

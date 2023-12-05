@@ -5,7 +5,9 @@
     "UnbanServerId": "ServerID",
     "MainServerId": "ServerID",
     "MainGuildTeamRoleId": "RoleID",
-    "UnbanGuildTeamRoleId": "RoleID"
+    "UnbanGuildTeamRoleId": "RoleID",
+    "DeveloperServerId": "ServerID",
+    "DeveloperGuildErrorChannelId": "ChannelID"
   },
   "EmbedConfig": {
     "DefaultEmbedColor": "FFFFFF"
