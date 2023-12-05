@@ -1,4 +1,6 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
@@ -10,6 +12,8 @@ using DisCatSharp.Exceptions;
 using DisCatSharp.Interactivity.Extensions;
 using Npgsql;
 
+#endregion
+
 namespace AGC_Entbannungssystem.Commands;
 
 public class RevokeBan : ApplicationCommandsModule
@@ -17,7 +21,8 @@ public class RevokeBan : ApplicationCommandsModule
     [ApplicationCommandRequirePermissions(Permissions.Administrator)]
     [SlashCommand("revokeban", "Entbannt einen User von AGC.")]
     public static async Task RevokeBanCommand(InteractionContext ctx,
-        [Option("user", "Der User, der entbannt werden soll.")] DiscordUser user,
+        [Option("user", "Der User, der entbannt werden soll.")]
+        DiscordUser user,
         [Option("antragskanal", "Der Kanal, wo der Antrag durchgeführt wurde")]
         DiscordChannel channel, [Option("Grund", "Der Grund für die Entbannung")] string reason)
     {
@@ -114,7 +119,7 @@ public class RevokeBan : ApplicationCommandsModule
             string dbpassword = BotConfigurator.GetConfig("Database", "DatabasePassword");
             string dbhost = BotConfigurator.GetConfig("Database", "DatabaseHost");
             var flagstring = $"Durch Antrag entbannt. Ursprünglicher Banngrund: ``{banreason}`` \n" +
-                             $"Details: Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen","")}``\n Entbannungszeitpunkt: ``{DateTimeOffset.Now.Timestamp()}``";
+                             $"Details: Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen", "")}``\n Entbannungszeitpunkt: ``{DateTimeOffset.Now.Timestamp()}``";
             await using var dbConnection =
                 new NpgsqlConnection($"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}");
             await dbConnection.OpenAsync();

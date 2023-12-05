@@ -25,7 +25,8 @@ public sealed class SendPanel : ApplicationCommandsModule
         embed1.WithDescription(
             "Hey! Willkommen auf dem Entbannungsserver vom ``Anime & Gaming Café``. Hier kannst du einen Entbannungsantrag stellen, wenn du auf dem Hauptserver gebannt wurdest. Drücke dazu einfach auf den Button unten und folge den Anweisungen. \n\n" +
             "📝 Bitte eröffne für alle Anliegen ein Ticket. Bitte sende keine Direktnachrichten oder FAs an Teammitglieder. Dies kann zu einer Ablehnung deines Antrags führen!");
-        var button = new DiscordButtonComponent(ButtonStyle.Primary, "open_appealticketinfo", "Entbannungsantrag erstellen",
+        var button = new DiscordButtonComponent(ButtonStyle.Primary, "open_appealticketinfo",
+            "Entbannungsantrag erstellen",
             emoji: new DiscordComponentEmoji("📝"));
         var mb = new DiscordMessageBuilder();
         mb.AddComponents(button);

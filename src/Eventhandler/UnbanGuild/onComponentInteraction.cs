@@ -1,11 +1,12 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
-using DisCatSharp.Entities;
 using DisCatSharp.Enums;
-
 using DisCatSharp.EventArgs;
-using DisCatSharp.Exceptions;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Eventhandler.UnbanGuild;
 
@@ -22,8 +23,8 @@ public class onComponentInteraction : ApplicationCommandsModule
             {
                 await Methodes.PanelCheckBan(client, e);
             }
+
             return Task.CompletedTask;
         });
     }
-    
 }

@@ -162,7 +162,7 @@ internal sealed class Program
             e.Handled = true;
             return Task.CompletedTask;
         }
-        
+
         ErrorReporting.SendErrorToDev(sender, sender.CurrentUser, e.Exception).GetAwaiter().GetResult();
 
         sender.Logger.LogError($"Exception occured: {e.Exception.GetType()}: {e.Exception.Message}");
@@ -177,11 +177,15 @@ public static class GlobalProperties
     public static ulong UnbanServerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
     public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainServerId"));
 
-    public static ulong DevGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperServerId"));
+    public static ulong DevGuildId { get; } =
+        ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperServerId"));
+
     public static bool ErrorTrackingEnabled { get; } =
         bool.Parse(BotConfigurator.GetConfig("ErrorTracking", "ErrorTrackingEnabled"));
+
     public static ulong ErrorTrackingChannelId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperGuildErrorChannelId"));
+
     public static ulong MainGuildTeamRoleId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainGuildTeamRoleId"));
 

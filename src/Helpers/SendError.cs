@@ -1,7 +1,10 @@
-﻿using AGC_Entbannungssystem.Services;
+﻿#region
+
 using DisCatSharp;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Helpers;
 
@@ -24,7 +27,7 @@ public static class ErrorReporting
         embed2.WithColor(DiscordColor.Red);
         try
         {
-            await botOwner.SendMessageAsync(embed: embed2);
+            await botOwner.SendMessageAsync(embed2);
         }
         catch (Exception)
         {
@@ -36,13 +39,12 @@ public static class ErrorReporting
             ulong errortrackingguildid = GlobalProperties.DevGuildId;
             var errortrackingguild = await client.GetGuildAsync(errortrackingguildid);
             var errortrackingchannel = errortrackingguild.GetChannel(GlobalProperties.ErrorTrackingChannelId);
-            await errortrackingchannel.SendMessageAsync(embed: embed2);
+            await errortrackingchannel.SendMessageAsync(embed2);
         }
         catch (Exception)
         {
-            
         }
+
         CurrentApplicationData.Client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
-        
     }
 }
