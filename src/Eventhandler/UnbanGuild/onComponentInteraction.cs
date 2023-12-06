@@ -26,15 +26,19 @@ public class onComponentInteraction : ApplicationCommandsModule
             if (cid == "open_appealticketinfo")
             {
                 DiscordGuild mainGuild = await client.GetGuildAsync(GlobalProperties.MainGuildId);
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
                 bool isBanned = false;
                 try
                 {
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Prüfe, ob du gebannt bist..."));
                     await mainGuild.GetBanAsync(e.User.Id);
                     isBanned = true;
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Du bist gebannt! Setze fort..."));
                 }
                 catch (NotFoundException)
                 {
                     // ignored
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Du bist nicht gebannt! Breche ab..."));
                     isBanned = false;
                 }
                 catch (Exception exception)
@@ -44,13 +48,13 @@ public class onComponentInteraction : ApplicationCommandsModule
                     embed.WithDescription(
                         "Es ist ein Fehler aufgetreten. Bitte versuche es später erneut. Der Fehler wurde automatisch an den Entwickler weitergeleitet.");
                     embed.WithColor(DiscordColor.Red);
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                        new DiscordInteractionResponseBuilder().AddEmbed(embed).AsEphemeral());
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
                 if (e.User.Id == GlobalProperties.BotOwnerId)
                 {
                     // application test
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Du bist der Botowner! Setze fort... (Test)"));
                     isBanned = true;
                 }
                 if (!isBanned)
@@ -60,19 +64,17 @@ public class onComponentInteraction : ApplicationCommandsModule
                     embed.WithDescription(
                         "Wie es scheint, bist du nicht auf AGC gebannt. Diese Überprüfung ist automatisiert. Du kannst also keinen Entbannungsantrag stellen.");
                     embed.WithColor(DiscordColor.Red);
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                        new DiscordInteractionResponseBuilder().AddEmbed(embed).AsEphemeral());
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
 
-                var rb = new DiscordInteractionResponseBuilder();
+                var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
                     "Ich habe alles gelesen und verstanden!",
                     emoji: new DiscordComponentEmoji("✅"));
                 rb.AddComponents(button);
                 rb.AddEmbeds(MessageGenerator.UnbanNoteGenerate());
-                rb.AsEphemeral();
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb);
+                await e.Interaction.EditOriginalResponseAsync(rb);
                 try
                 {
                     ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
@@ -87,8 +89,6 @@ public class onComponentInteraction : ApplicationCommandsModule
             }
             else if (cid == "open_appealticket_confirm")
             {
-                // TODO: check if user has already an open ticket
-                // TODO: check if user is "still" banned
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
                 await logChannel.SendMessageAsync(
@@ -115,7 +115,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                     $"$new {e.User.Id}");
                 await Task.Delay(500);
                 await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Ticket erstellt!"));
-                
             }
 
 
