@@ -30,10 +30,10 @@ public class RevokeBan : ApplicationCommandsModule
         DiscordGuild unbanGuild = await ctx.Client.GetGuildAsync(GlobalProperties.UnbanServerId);
         DiscordBan? banentry;
 
-        if (!channel.Name.Contains("antrag"))
+        if (!channel.Name.Contains("antrag") || channel.Name.Contains("antrag-stellen"))
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().WithContent("Dieser Channel ist kein Antrag!"));
+                new DiscordInteractionResponseBuilder().WithContent("Dieser Channel ist kein Antrag!").AsEphemeral());
             return;
         }
 
@@ -119,7 +119,7 @@ public class RevokeBan : ApplicationCommandsModule
             string dbpassword = BotConfigurator.GetConfig("Database", "DatabasePassword");
             string dbhost = BotConfigurator.GetConfig("Database", "DatabaseHost");
             var flagstring = $"Durch Antrag entbannt. Ursprünglicher Banngrund: ``{banreason}`` \n" +
-                             $"Details: Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen", "")}``\n Entbannungszeitpunkt: ``{DateTimeOffset.Now.Timestamp()}``";
+                             $"Details: Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen", "")}``\n Entbannungszeitpunkt: {DateTimeOffset.Now.Timestamp()}\n Entbannung ausgeführt von: ``{ctx.User.UsernameWithDiscriminator}`` ({ctx.User.Id})";
             await using var dbConnection =
                 new NpgsqlConnection($"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}");
             await dbConnection.OpenAsync();
@@ -127,8 +127,8 @@ public class RevokeBan : ApplicationCommandsModule
                 new NpgsqlCommand(
                     "INSERT INTO flags (userid, punisherid, datum, description, caseid) VALUES (@userid, @botid, @timestamp, @banreason, @caseid)",
                     dbConnection);
-            dbCommand.Parameters.AddWithValue("userid", user.Id);
-            dbCommand.Parameters.AddWithValue("botid", ctx.Client.CurrentUser.Id);
+            dbCommand.Parameters.AddWithValue("userid", (long)user.Id);
+            dbCommand.Parameters.AddWithValue("botid", (long)ctx.Client.CurrentUser.Id);
             dbCommand.Parameters.AddWithValue("timestamp", DateTimeOffset.Now.ToUnixTimeSeconds());
             dbCommand.Parameters.AddWithValue("banreason", flagstring);
             dbCommand.Parameters.AddWithValue("caseid", caseid);
@@ -138,7 +138,8 @@ public class RevokeBan : ApplicationCommandsModule
                 .WithTitle("Entbannung erfolgreich")
                 .WithFooter(ctx.User.UsernameWithDiscriminator, ctx.User.AvatarUrl)
                 .WithDescription(
-                    $"Der User ``{user.UsernameWithDiscriminator}`` ``{user.Id}`` wurde erfolgreich entbannt.")
+                    $"Der User ``{user.UsernameWithDiscriminator}`` ``{user.Id}`` wurde erfolgreich entbannt. \n" +
+                    $"Grund: {reason}")
                 .WithColor(DiscordColor.Green);
             var swhb = new DiscordWebhookBuilder();
             swhb.AddEmbed(successEmbedBuilder);
