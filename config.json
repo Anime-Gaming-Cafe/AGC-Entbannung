@@ -7,7 +7,8 @@
     "MainGuildTeamRoleId": "RoleID",
     "UnbanGuildTeamRoleId": "RoleID",
     "LogChannelId": "ChannelID",
-    "AppealRoleId": "RoleID"
+    "AppealRoleId": "RoleID",
+    "SyncIgnoredRoleList": "1066374671131480105"
   },
   "ErrorTracking": {
     "ErrorTrackingEnabled": "false",
