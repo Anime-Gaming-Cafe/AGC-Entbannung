@@ -1,5 +1,7 @@
 ﻿#region
 
+using AGC_Entbannungssystem.Helpers;
+using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
@@ -19,9 +21,27 @@ public static class CheckTeamRole
                 DiscordGuild mainGuild = await client.GetGuildAsync(GlobalProperties.MainGuildId);
                 DiscordGuild unbanGuild = await client.GetGuildAsync(GlobalProperties.UnbanServerId);
                 DiscordRole unbanTeamRole = unbanGuild.GetRole(GlobalProperties.UnbanServerTeamRoleId);
+                var ignoredroles = BotConfigurator.GetConfig("MainConfig", "SyncIgnoredRoleList");
 
+                var split = ignoredroles.Split(", ");
+                List<ulong> ignoredroleslist = new();
+                foreach (var item in split)
+                {
+                    ignoredroleslist.Add(ulong.Parse(item));
+                }
+                
                 foreach (var member in mainGuild.Members.Values)
                 {
+                    bool hasIgnoredRole = false;
+                    foreach (var role in member.Roles)
+                    {
+                        if (ignoredroleslist.Contains(role.Id))
+                        {
+                            hasIgnoredRole = true;
+                        }
+                    }
+                    if (hasIgnoredRole) continue;
+                    
                     if (unbanGuild.Members.TryGetValue(member.Id, out var unbanGuildMember))
                     {
                         bool hasTeamRoleInMainGuild =
@@ -43,6 +63,7 @@ public static class CheckTeamRole
             catch (Exception err)
             {
                 client.Logger.LogError(err, "Error in CheckTeamRole");
+                await ErrorReporting.SendErrorToDev(client, client.CurrentUser, err);
             }
 
             await Task.Delay(TimeSpan.FromMinutes(2));
