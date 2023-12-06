@@ -139,7 +139,7 @@ public class RevokeBan : ApplicationCommandsModule
                 .WithFooter(ctx.User.UsernameWithDiscriminator, ctx.User.AvatarUrl)
                 .WithDescription(
                     $"Der User ``{user.UsernameWithDiscriminator}`` ``{user.Id}`` wurde erfolgreich entbannt. \n" +
-                    $"Grund: {reason}")
+                    $"Grund: ```{reason}```")
                 .WithColor(DiscordColor.Green);
             var swhb = new DiscordWebhookBuilder();
             swhb.AddEmbed(successEmbedBuilder);
