@@ -1,5 +1,7 @@
 ﻿#region
 
+using AGC_Entbannungssystem.Helpers;
+using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
@@ -24,6 +26,24 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
         {
             try
             {
+                var ignoredroles = BotConfigurator.GetConfig("MainConfig", "SyncIgnoredRoleList");
+                
+                var split = ignoredroles.Split(", ");
+                List<ulong> ignoredroleslist = new();
+                foreach (var item in split)
+                {
+                    ignoredroleslist.Add(ulong.Parse(item));
+                }
+                
+                bool hasIgnoredRole = false;
+                foreach (var role in args.RolesAfter)
+                {
+                    if (ignoredroleslist.Contains(role.Id))
+                    {
+                        hasIgnoredRole = true;
+                    }
+                }
+                if (hasIgnoredRole) return;
                 if (args.RolesAfter.Any(x => x.Id == GlobalProperties.MainGuildTeamRoleId))
                 {
                     DiscordGuild unbanGuild = await client.GetGuildAsync(GlobalProperties.UnbanServerId);
@@ -43,6 +63,7 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
             catch (Exception err)
             {
                 client.Logger.LogError(err, "Error in onTeamRoleChange");
+                await ErrorReporting.SendErrorToDev(client, args.Member, err);
             }
         });
     }
