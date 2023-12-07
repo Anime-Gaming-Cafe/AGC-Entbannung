@@ -114,9 +114,10 @@ internal sealed class Program
 
     private static async Task RunTasks(DiscordClient client)
     {
-        await Task.Delay(TimeSpan.FromSeconds(20));
+        await Task.Delay(TimeSpan.FromSeconds(10));
         _ = CheckTeamRole.Run(client);
         _ = CheckExpiredVotes.Run(client);
+        _ = CheckExpiredBlock.Run(client); 
     }
 
 
