@@ -29,7 +29,7 @@ public static class CheckTeamRole
                 {
                     ignoredroleslist.Add(ulong.Parse(item));
                 }
-                
+
                 foreach (var member in mainGuild.Members.Values)
                 {
                     bool hasIgnoredRole = false;
@@ -40,8 +40,9 @@ public static class CheckTeamRole
                             hasIgnoredRole = true;
                         }
                     }
+
                     if (hasIgnoredRole) continue;
-                    
+
                     if (unbanGuild.Members.TryGetValue(member.Id, out var unbanGuildMember))
                     {
                         bool hasTeamRoleInMainGuild =

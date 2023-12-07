@@ -8,7 +8,6 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Exceptions;
-using Sentry;
 
 #endregion
 
@@ -26,19 +25,23 @@ public class onComponentInteraction : ApplicationCommandsModule
             if (cid == "open_appealticketinfo")
             {
                 DiscordGuild mainGuild = await client.GetGuildAsync(GlobalProperties.MainGuildId);
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().AsEphemeral());
                 bool isBanned = false;
                 try
                 {
-                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Prüfe, ob du gebannt bist..."));
+                    await e.Interaction.EditOriginalResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Prüfe, ob du gebannt bist..."));
                     await mainGuild.GetBanAsync(e.User.Id);
                     isBanned = true;
-                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Du bist gebannt! Setze fort..."));
+                    await e.Interaction.EditOriginalResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Du bist gebannt! Setze fort..."));
                 }
                 catch (NotFoundException)
                 {
                     // ignored
-                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Du bist nicht gebannt! Breche ab..."));
+                    await e.Interaction.EditOriginalResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Du bist nicht gebannt! Breche ab..."));
                     isBanned = false;
                 }
                 catch (Exception exception)
@@ -51,12 +54,15 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
+
                 if (e.User.Id == GlobalProperties.BotOwnerId)
                 {
                     // application test
-                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Du bist der Botowner! Setze fort... (Test)"));
+                    await e.Interaction.EditOriginalResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Du bist der Botowner! Setze fort... (Test)"));
                     isBanned = true;
                 }
+
                 if (!isBanned)
                 {
                     var embed = new DiscordEmbedBuilder();
@@ -93,11 +99,14 @@ public class onComponentInteraction : ApplicationCommandsModule
                 var logChannel = await client.GetChannelAsync(logChannelId);
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
-                await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().AsEphemeral());
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
                 var appealrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
                 await Task.Delay(1000);
-                await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Prüfe auf offenes Ticket..."));
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Prüfe auf offenes Ticket..."));
                 DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
                 if (member.Roles.Contains(appealrole))
                 {
@@ -109,14 +118,16 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
+
                 await Task.Delay(1000);
-                await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Erstelle Ticket..."));
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Erstelle Ticket..."));
                 await logChannel.SendMessageAsync(
                     $"$new {e.User.Id}");
                 await Task.Delay(500);
-                await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent("Ticket erstellt!"));
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Ticket erstellt!"));
             }
-
 
 
             await Task.CompletedTask;

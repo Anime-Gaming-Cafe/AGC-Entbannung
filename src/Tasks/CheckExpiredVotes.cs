@@ -1,9 +1,13 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Tasks;
 
@@ -26,10 +30,10 @@ public class CheckExpiredVotes
                 // get all expired votes
                 while (await reader.ReadAsync())
                 {
-                    long dbcid = (long)reader.GetInt64(0);
+                    long dbcid = reader.GetInt64(0);
                     var messageid = (ulong)reader.GetInt64(1);
                     var channelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
-                    
+
                     // get messages from id in vote channel
                     var votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
                     var votechannel = await client.GetChannelAsync(votechannelid);
@@ -43,14 +47,14 @@ public class CheckExpiredVotes
                     {
                         if (reaction.Emoji.Name == "👍")
                         {
-                            positiveVotes = reaction.Count-1;
+                            positiveVotes = reaction.Count - 1;
                         }
                         else if (reaction.Emoji.Name == "👎")
                         {
-                            negativeVotes = reaction.Count-1;
+                            negativeVotes = reaction.Count - 1;
                         }
                     }
-                    
+
                     // get channel from id
                     var channel = await client.GetChannelAsync(channelid);
                     DiscordChannel? antragc = null;
@@ -62,16 +66,14 @@ public class CheckExpiredVotes
                     {
                         await ErrorReporting.SendErrorToDev(client, client.CurrentUser, e);
                     }
-                    
-                    
 
 
                     // get message from id
                     var msg = await channel.GetMessageAsync(messageid);
                     // remove all reactions from message
                     await msg.DeleteAllReactionsAsync();
-                    
-                    
+
+
                     var resultString = $"**Ergebnis der Abstimmung für {antragc?.Name} ({antragc?.Mention}):**\n" +
                                        $"**{positiveVotes}** Stimmen für **Ja**\n" +
                                        $"**{negativeVotes}** Stimmen für **Nein**\n" +
@@ -79,12 +81,12 @@ public class CheckExpiredVotes
 
 
                     DiscordColor embedColor;
-                    
+
                     string antragStatus;
                     if (positiveVotes > negativeVotes)
                     {
                         antragStatus = "Antrag wurde angenommen";
-                        embedColor = DiscordColor.Green; 
+                        embedColor = DiscordColor.Green;
                     }
                     else if (positiveVotes < negativeVotes)
                     {
@@ -101,12 +103,9 @@ public class CheckExpiredVotes
                     emb.WithDescription(resultString + antragStatus);
                     emb.WithColor(embedColor);
                     emb.WithTimestamp(DateTimeOffset.UtcNow);
-                    await msg.RespondAsync(embed: emb);
-                    
-                    
-                    
-                    
+                    await msg.RespondAsync(emb);
                 }
+
                 await reader.CloseAsync();
                 await conn.CloseAsync();
                 // delete all expired votes from db

@@ -1,6 +1,8 @@
-﻿using AGC_Entbannungssystem.Services;
-using DisCatSharp;
-using Npgsql;
+﻿#region
+
+using AGC_Entbannungssystem.Services;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Helpers;
 
@@ -19,6 +21,5 @@ public static class Helperfunctions
         string dbpassword = BotConfigurator.GetConfig("Database", "DatabasePassword");
         string dbhost = BotConfigurator.GetConfig("Database", "DatabaseHost");
         return $"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}";
-
     }
 }

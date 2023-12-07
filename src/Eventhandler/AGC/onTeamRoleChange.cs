@@ -27,14 +27,14 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
             try
             {
                 var ignoredroles = BotConfigurator.GetConfig("MainConfig", "SyncIgnoredRoleList");
-                
+
                 var split = ignoredroles.Split(", ");
                 List<ulong> ignoredroleslist = new();
                 foreach (var item in split)
                 {
                     ignoredroleslist.Add(ulong.Parse(item));
                 }
-                
+
                 bool hasIgnoredRole = false;
                 foreach (var role in args.RolesAfter)
                 {
@@ -43,6 +43,7 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
                         hasIgnoredRole = true;
                     }
                 }
+
                 if (hasIgnoredRole) return;
                 if (args.RolesAfter.Any(x => x.Id == GlobalProperties.MainGuildTeamRoleId))
                 {

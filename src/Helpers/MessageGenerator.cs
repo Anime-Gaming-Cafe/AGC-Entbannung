@@ -1,4 +1,8 @@
-﻿using DisCatSharp.Entities;
+﻿#region
+
+using DisCatSharp.Entities;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Helpers;
 

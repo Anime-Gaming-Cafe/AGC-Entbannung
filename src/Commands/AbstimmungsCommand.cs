@@ -1,4 +1,6 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
@@ -6,6 +8,8 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using Npgsql;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Commands;
 
@@ -57,19 +61,21 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         Console.WriteLine(votechannelid);
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
 #if DEBUG
-        var votechannelmessage = await votechannel.SendMessageAsync("TeamPing (Anwendungstestmodus)", embed: embed);
+        var votechannelmessage = await votechannel.SendMessageAsync("TeamPing (Anwendungstestmodus)", embed);
 #else
-        var votechannelmessage = await votechannel.SendMessageAsync(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"), embed: embed);
+        var votechannelmessage =
+            await votechannel.SendMessageAsync(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"), embed: embed);
 #endif
-        
+
         //move channel to vote category
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Verschiebe Channel in die Abstimmungskategorie..."));
+        await ctx.EditResponseAsync(
+            new DiscordWebhookBuilder().WithContent("Verschiebe Channel in die Abstimmungskategorie..."));
         ulong votecategoryid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "VoteCategoryChannelId"));
         var votecategory = await CurrentApplicationData.Client.GetChannelAsync(votecategoryid);
         await ctx.Channel.ModifyAsync(x => x.Parent = votecategory);
         await Task.Delay(200);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Verschoben!"));
-        
+
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Abstimmung erstellt!"));
         // daumen hoch und runter
         await votechannelmessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));
