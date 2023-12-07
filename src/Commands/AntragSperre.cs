@@ -16,7 +16,7 @@ public class AntragSperre : ApplicationCommandsModule
     [ApplicationRequireStaffRole]
     [SlashCommand("sperre", "Sperrt einen User von der Antragstellung für eine bestimmte Zeit.")]
     public static async Task SperreCommand(InteractionContext ctx,
-        [Option("user", "Der User, der gesperrt werden soll.")] DiscordUser user, [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4)] int antragsnummer,
+        [Option("user", "Der User, der gesperrt werden soll.")] DiscordUser user, [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4)] string antragsnummer,
         [Option("grund", "Der Grund für die Sperre.")] string reason)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
@@ -27,7 +27,7 @@ public class AntragSperre : ApplicationCommandsModule
             new DiscordWebhookBuilder().WithContent("Prüfe Eingaben..."));
 
         
-        if (antragsnummer.ToString().Length != 4 || !antragsnummer.ToString().All(char.IsDigit))
+        if (!antragsnummer.All(char.IsDigit))
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent("⚠️ Die Antragsnummer ist ungültig!"));
