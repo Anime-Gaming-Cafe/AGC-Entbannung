@@ -8,6 +8,7 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Exceptions;
+using Microsoft.Extensions.Logging;
 
 #endregion
 
@@ -90,7 +91,8 @@ public class onComponentInteraction : ApplicationCommandsModule
                 }
                 catch (Exception exception)
                 {
-                    Console.WriteLine(exception);
+                    await ErrorReporting.SendErrorToDev(client, e.User, exception);
+                    client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
                 }
             }
             else if (cid == "open_appealticket_confirm")

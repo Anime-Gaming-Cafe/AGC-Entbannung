@@ -58,7 +58,6 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         embed.Timestamp = DateTimeOffset.UtcNow;
         embed.WithDescription($"{ctx.Channel.Name} | ({ctx.Channel.Mention}) steht zur Abstimmung bereit.");
         ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
-        Console.WriteLine(votechannelid);
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
 #if DEBUG
         var votechannelmessage = await votechannel.SendMessageAsync("TeamPing (Anwendungstestmodus)", embed);
