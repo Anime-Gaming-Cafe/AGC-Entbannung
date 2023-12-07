@@ -16,12 +16,25 @@ public class AntragSperre : ApplicationCommandsModule
     [ApplicationRequireStaffRole]
     [SlashCommand("sperre", "Sperrt einen User von der Antragstellung für eine bestimmte Zeit.")]
     public static async Task SperreCommand(InteractionContext ctx,
-        [Option("user", "Der User, der gesperrt werden soll.")] DiscordUser user, [Option("antragsnummer", "Die Antragsnummer.")] int antragsnummer,
+        [Option("user", "Der User, der gesperrt werden soll.")] DiscordUser user, [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4)] int antragsnummer,
         [Option("grund", "Der Grund für die Sperre.")] string reason)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
         var constring = Helperfunctions.DbString();
+        
+        await ctx.EditResponseAsync(
+            new DiscordWebhookBuilder().WithContent("Prüfe Eingaben..."));
+
+        
+        if (antragsnummer.ToString().Length != 4 || !antragsnummer.ToString().All(char.IsDigit))
+        {
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("⚠️ Die Antragsnummer ist ungültig!"));
+            return;
+        }
+        
+        
         ulong roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreRoleId"));
         DiscordRole role = ctx.Guild.GetRole(roleid);
         await ctx.EditResponseAsync(
