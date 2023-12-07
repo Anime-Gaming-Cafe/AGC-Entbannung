@@ -56,7 +56,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
 
-                if (e.User.Id == GlobalProperties.BotOwnerId)
+                if (e.User.Id == GlobalProperties.BotOwnerId || e.User.Id == 515404778021322773)
                 {
                     // application test
                     await e.Interaction.EditOriginalResponseAsync(

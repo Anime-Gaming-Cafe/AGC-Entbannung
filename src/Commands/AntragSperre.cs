@@ -1,5 +1,4 @@
-﻿using AGC_Entbannungssystem.Enums;
-using AGC_Entbannungssystem.Helpers;
+﻿using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
@@ -18,8 +17,7 @@ public class AntragSperre : ApplicationCommandsModule
     [SlashCommand("sperre", "Sperrt einen User von der Antragstellung für eine bestimmte Zeit.")]
     public static async Task SperreCommand(InteractionContext ctx,
         [Option("user", "Der User, der gesperrt werden soll.")] DiscordUser user, [Option("antragsnummer", "Die Antragsnummer.")] int antragsnummer,
-        [Option("grund", "Der Grund für die Sperre.")] string reason,
-        [Option("dauer", "Die Zeit, für die der User gesperrt werden soll.")] SperrDauer zeit = SperrDauer.DreiMonate)
+        [Option("grund", "Der Grund für die Sperre.")] string reason)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
@@ -55,7 +53,7 @@ public class AntragSperre : ApplicationCommandsModule
         {
             ctx.Client.Logger.LogError(e, "Error while granting role to user. User is not in guild.");
         }
-        var timestamp = GetSperrDauer(zeit);
+        var timestamp = DateTimeOffset.UtcNow.AddMonths(3).ToUnixTimeSeconds();
         await using var con2 = new NpgsqlConnection(constring);
         await con2.OpenAsync();
         await using var cmd2 = new NpgsqlCommand("INSERT INTO antragssperre (user_id, reason, expires_at) VALUES (@userid, @reason, @timestamp)", con2);
@@ -73,25 +71,4 @@ public class AntragSperre : ApplicationCommandsModule
         DiscordChannel ichan = ctx.Guild.GetChannel(infochannelid);
         await ichan.SendMessageAsync(embed);
     }
-    
-    private static long GetSperrDauer(SperrDauer dauer)
-    {
-        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        switch (dauer)
-        {
-            case SperrDauer.DreiMonate:
-                timestamp += 7776000;
-                break;
-            case SperrDauer.SechsMonate:
-                timestamp += 15552000;
-                break;
-            case SperrDauer.EinJahr:
-                timestamp += 31536000;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(dauer), dauer, null);
-        }
-        return timestamp;
-    }
-
 }

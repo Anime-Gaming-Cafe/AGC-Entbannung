@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="src\Enums\" />
       <Folder Include="src\Helpers\InteractionMethodes\" />
     </ItemGroup>
 
