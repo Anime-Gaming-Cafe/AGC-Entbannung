@@ -10,7 +10,9 @@
     "AppealRoleId": "RoleID",
     "SyncIgnoredRoleList": "User ID, User ID, User ID",
     "AbstimmungsChannelId": "ChannelID",
-    "VoteCategoryChannelId": "ChannelID"
+    "VoteCategoryChannelId": "ChannelID",
+    "SperreRoleId": "RoleID",
+    "SperreInfoChannelId":  "ChannelID"
   },
   "ErrorTracking": {
     "ErrorTrackingEnabled": "false",
