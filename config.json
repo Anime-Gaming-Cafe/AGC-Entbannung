@@ -8,7 +8,9 @@
     "UnbanGuildTeamRoleId": "RoleID",
     "LogChannelId": "ChannelID",
     "AppealRoleId": "RoleID",
-    "SyncIgnoredRoleList": "User ID, User ID, User ID"
+    "SyncIgnoredRoleList": "User ID, User ID, User ID",
+    "AbstimmungsChannelId": "ChannelID",
+    "VoteCategoryChannelId": "ChannelID"
   },
   "ErrorTracking": {
     "ErrorTrackingEnabled": "false",

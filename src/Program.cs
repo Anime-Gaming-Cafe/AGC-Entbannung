@@ -116,6 +116,7 @@ internal sealed class Program
     {
         await Task.Delay(TimeSpan.FromSeconds(20));
         _ = CheckTeamRole.Run(client);
+        _ = CheckExpiredVotes.Run(client);
     }
 
 

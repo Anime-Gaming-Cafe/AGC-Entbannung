@@ -114,14 +114,10 @@ public class RevokeBan : ApplicationCommandsModule
             await ctx.EditResponseAsync(whb);
 
             await mainGuild.UnbanMemberAsync(user.Id, reason);
-            string databasename = BotConfigurator.GetConfig("Database", "DatabaseName");
-            string dbuser = BotConfigurator.GetConfig("Database", "DatabaseUser");
-            string dbpassword = BotConfigurator.GetConfig("Database", "DatabasePassword");
-            string dbhost = BotConfigurator.GetConfig("Database", "DatabaseHost");
             var flagstring = $"Durch Antrag entbannt. \nUrsprünglicher Banngrund: ``{banreason}`` \n" +
                              $"__Details:__\n Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen", "")}``\n Entbannungszeitpunkt: {DateTimeOffset.Now.Timestamp()}\n Entbannung ausgeführt von: ``{ctx.User.UsernameWithDiscriminator}`` ({ctx.User.Id})";
             await using var dbConnection =
-                new NpgsqlConnection($"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}");
+                new NpgsqlConnection(Helperfunctions.DbString());
             await dbConnection.OpenAsync();
             await using var dbCommand =
                 new NpgsqlCommand(
