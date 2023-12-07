@@ -117,7 +117,7 @@ internal sealed class Program
         await Task.Delay(TimeSpan.FromSeconds(10));
         _ = CheckTeamRole.Run(client);
         _ = CheckExpiredVotes.Run(client);
-        _ = CheckExpiredBlock.Run(client); 
+        _ = CheckExpiredBlock.Run(client);
     }
 
 

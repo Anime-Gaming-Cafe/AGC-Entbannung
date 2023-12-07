@@ -1,15 +1,18 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
-using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Exceptions;
 using Npgsql;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Tasks;
 
 public class CheckExpiredBlock
 {
-     public static async Task Run(DiscordClient client)
+    public static async Task Run(DiscordClient client)
     {
         while (true)
         {
@@ -27,9 +30,10 @@ public class CheckExpiredBlock
                 while (await reader.ReadAsync())
                 {
                     var userid = (ulong)reader.GetInt64(0);
-                    
-                    var guild = await client.GetGuildAsync(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId")));
-                    
+
+                    var guild = await client.GetGuildAsync(
+                        ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId")));
+
                     var roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "BlockRoleId"));
                     try
                     {
@@ -41,6 +45,7 @@ public class CheckExpiredBlock
                     {
                         // ignored
                     }
+
                     await using var conn2 = new NpgsqlConnection(dbstring);
                     await conn2.OpenAsync();
                     await using var cmd2 = new NpgsqlCommand();
@@ -51,12 +56,14 @@ public class CheckExpiredBlock
                     await conn2.CloseAsync();
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }
+
                 await conn.CloseAsync();
             }
             catch (Exception e)
             {
                 await ErrorReporting.SendErrorToDev(client, CurrentApplicationData.BotApplication, e);
             }
+
             await Task.Delay(TimeSpan.FromMinutes(2));
         }
     }

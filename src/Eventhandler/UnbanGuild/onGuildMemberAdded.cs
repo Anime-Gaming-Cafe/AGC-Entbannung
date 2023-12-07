@@ -1,4 +1,6 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
@@ -6,6 +8,8 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using Npgsql;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Eventhandler.UnbanGuild;
 
@@ -35,13 +39,12 @@ public class onGuildMemberAdded : ApplicationCommandsModule
                 {
                     await ErrorReporting.SendErrorToDev(client, e.Member, exception);
                 }
-
             }
-            
+
             await con.CloseAsync();
         });
 
 
-            await Task.CompletedTask;
+        await Task.CompletedTask;
     }
 }
