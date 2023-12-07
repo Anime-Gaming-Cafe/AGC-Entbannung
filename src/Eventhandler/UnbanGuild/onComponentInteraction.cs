@@ -9,6 +9,7 @@ using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Exceptions;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 #endregion
 
@@ -55,6 +56,28 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
+
+                var cons = Helperfunctions.DbString();
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Prüfe, ob du für Anträge gesperrt bist..."));
+                await using var con = new NpgsqlConnection(cons);
+                await con.OpenAsync();
+                await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
+                cmd.Parameters.AddWithValue("userid", (long)e.User.Id);
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (reader.HasRows)
+                {
+                    await e.Interaction.EditOriginalResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Du bist für Anträge gesperrt!"));
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithDescription(
+                        "Du bist für Anträge gesperrt. Du kannst keinen Entbannungsantrag stellen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    return;
+                }
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Du bist nicht für Anträge gesperrt! Setze fort..."));
 
                 if (e.User.Id == GlobalProperties.BotOwnerId)
                 {
