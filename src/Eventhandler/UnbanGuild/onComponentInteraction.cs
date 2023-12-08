@@ -158,6 +158,11 @@ public class onComponentInteraction : ApplicationCommandsModule
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
                     new DiscordInteractionResponseBuilder().AsEphemeral());
 
+                ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
+                var logChannel = await client.GetChannelAsync(logChannelId);
+                await logChannel.SendMessageAsync(
+                    $"{e.User.Mention} ({e.User.Id}) hat die Sperrzeit **abgefragt** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                
                 var cons = Helperfunctions.DbString();
                 try
                 {
