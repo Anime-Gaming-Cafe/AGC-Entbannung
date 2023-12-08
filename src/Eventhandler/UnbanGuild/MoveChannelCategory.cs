@@ -35,7 +35,7 @@ public class MoveChannelCategory : ApplicationCommandsModule
                 ulong moderatorRoleId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"));
                 DiscordRole moderatorRole = e.Guild.GetRole(moderatorRoleId);
                 var member = await e.Guild.GetMemberAsync(e.Message.Author.Id);
-                if (member.Roles.Contains(moderatorRole)) return;
+                if (!member.Roles.Contains(moderatorRole)) return;
                 var cat = e.Channel.ParentId;
                 var ucat = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "BearbeitetCategoryId"));
                 if (cat == ucat)
