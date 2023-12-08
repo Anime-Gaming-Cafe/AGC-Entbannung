@@ -12,7 +12,8 @@
     "AbstimmungsChannelId": "ChannelID",
     "VoteCategoryChannelId": "ChannelID",
     "SperreRoleId": "RoleID",
-    "SperreInfoChannelId":  "ChannelID"
+    "SperreInfoChannelId":  "ChannelID",
+    "BearbeitetCategoryId": "CategoryID"
   },
   "ErrorTracking": {
     "ErrorTrackingEnabled": "false",
