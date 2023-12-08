@@ -153,6 +153,41 @@ public class onComponentInteraction : ApplicationCommandsModule
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Ticket erstellt!"));
             }
+            else if (cid == "open_sperrinfo")
+            {
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().AsEphemeral());
+
+                var cons = Helperfunctions.DbString();
+                try
+                {
+                    await using var con = new NpgsqlConnection(cons);
+                    await con.OpenAsync();
+
+                    await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
+                    cmd.Parameters.AddWithValue("userid", (long)e.User.Id);
+
+                    await using var reader = await cmd.ExecuteReaderAsync();
+
+                    if (await reader.ReadAsync())
+                    {
+                        var expiresAt = reader.GetInt64(1);
+                        string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" + expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
+                        await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent(sperrstring));
+                    }
+                    else
+                    {
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent("Du bist nicht gesperrt!"));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred: " + ex.Message);
+                    await ErrorReporting.SendErrorToDev(client, e.User, ex);
+                }
+
+            }
 
 
             await Task.CompletedTask;

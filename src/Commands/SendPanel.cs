@@ -33,4 +33,27 @@ public sealed class SendPanel : ApplicationCommandsModule
         mb.WithEmbed(embed1);
         await ctx.Channel.SendMessageAsync(mb);
     }
+
+    [ApplicationCommandRequirePermissions(Permissions.Administrator)]
+    [SlashCommand("sendsperrepanel", "Sendet das Sperre Panel für den Entbannungsantrag.")]
+    public static async Task SendSperrePanel(InteractionContext ctx)
+    {
+        var embed1 = new DiscordEmbedBuilder();
+        // defer
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Panel gesendet!"))
+                .AsEphemeral());
+        embed1.Title = "Antragssperre!";
+        embed1.WithColor(DiscordColor.Red);
+        embed1.WithDescription(
+            "Du bist derzeit für Anträge wegen deinem letzten Antrag gesperrt. Du kannst erst wieder einen Antrag stellen, wenn deine Sperre abgelaufen ist. Bitte kontaktiere in der Zwischenzeit kein Teammitglied. \n\n" +
+            "📝 Du kannst hier nachschauen, wie lange deine Sperre noch anhält.");
+        var button = new DiscordButtonComponent(ButtonStyle.Primary, "open_sperrinfo",
+            "Wie lange bin ich gesperrt?",
+            emoji: new DiscordComponentEmoji("📝"));
+        var mb = new DiscordMessageBuilder();
+        mb.AddComponents(button);
+        mb.WithEmbed(embed1);
+        await ctx.Channel.SendMessageAsync(mb);
+    }
 }
