@@ -101,7 +101,8 @@ internal sealed class Program
 
         client.Ready += Discord_Ready;
 
-        await client.ConnectAsync();
+        await client.ConnectAsync(new DiscordActivity("Verwaltung der Entbannungen",
+            ActivityType.Custom), UserStatus.Idle);
 
         CurrentApplicationData.Client = client;
         CurrentApplicationData.BotApplication = client.CurrentUser;
