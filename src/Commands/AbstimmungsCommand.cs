@@ -73,7 +73,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         var notifyembed = new DiscordEmbedBuilder();
         notifyembed.WithTitle("Status Update");
         notifyembed.WithDescription($"Lieber User, \n" +
-                                    $"wir besprechen deinen Antrag nun intern. Du erhältst eine Rückmeldung, sobald die Entscheidung feststeht!");
+                                    $"wir besprechen deinen Antrag nun intern. Du erhältst eine Rückmeldung, sobald die Entscheidung feststeht! \nDies dauert in der Regel 24 Stunden.");
         notifyembed.WithColor(DiscordColor.Green);
         notifyembed.WithFooter("AGC Entbannungssystem");
         await ctx.Channel.SendMessageAsync(notifyembed);
