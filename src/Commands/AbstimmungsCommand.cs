@@ -59,12 +59,8 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         embed.WithDescription($"{ctx.Channel.Name} | ({ctx.Channel.Mention}) steht zur Abstimmung bereit.");
         ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
-#if DEBUG
-        var votechannelmessage = await votechannel.SendMessageAsync("TeamPing (Anwendungstestmodus)", embed);
-#else
         var votechannelmessage =
-            await votechannel.SendMessageAsync(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"), embed: embed);
-#endif
+            await votechannel.SendMessageAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId")}>", embed: embed);
 
         //move channel to vote category
         await ctx.EditResponseAsync(
@@ -74,7 +70,13 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         await ctx.Channel.ModifyAsync(x => x.Parent = votecategory);
         await Task.Delay(200);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Verschoben!"));
-
+        var notifyembed = new DiscordEmbedBuilder();
+        notifyembed.WithTitle("Status Update");
+        notifyembed.WithDescription($"Lieber User, \n" +
+                                    $"wir besprechen deinen Antrag nun intern. Du erhältst eine Rückmeldung, sobald die Entscheidung feststeht!");
+        notifyembed.WithColor(DiscordColor.Green);
+        notifyembed.WithFooter("AGC Entbannungssystem");
+        await ctx.Channel.SendMessageAsync(notifyembed);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Abstimmung erstellt!"));
         // daumen hoch und runter
         await votechannelmessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));

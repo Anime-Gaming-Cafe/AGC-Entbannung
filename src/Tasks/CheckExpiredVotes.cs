@@ -85,17 +85,17 @@ public class CheckExpiredVotes
                     string antragStatus;
                     if (positiveVotes > negativeVotes)
                     {
-                        antragStatus = "Antrag wurde angenommen";
+                        antragStatus = "Abstimmung ist positiv";
                         embedColor = DiscordColor.Green;
                     }
                     else if (positiveVotes < negativeVotes)
                     {
-                        antragStatus = "Antrag wurde abgelehnt";
+                        antragStatus = "Abstimmung ist negativ";
                         embedColor = DiscordColor.Red;
                     }
                     else
                     {
-                        antragStatus = "Ergebnis ist unentschieden";
+                        antragStatus = "Abstimmung ist unentschieden";
                         embedColor = DiscordColor.Yellow;
                     }
 
@@ -103,7 +103,7 @@ public class CheckExpiredVotes
                     emb.WithDescription(resultString + antragStatus);
                     emb.WithColor(embedColor);
                     emb.WithTimestamp(DateTimeOffset.UtcNow);
-                    await msg.RespondAsync(emb);
+                    await msg.RespondAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId")}>",emb);
                 }
 
                 await reader.CloseAsync();
