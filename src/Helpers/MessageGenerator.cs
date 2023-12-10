@@ -37,7 +37,8 @@ public static class MessageGenerator
             "Verzichte bitte auf mögliche Lückenfüller, indem du auf unnötige Rechtfertigungen verzichtest, wie z.B. warum du entbannt werden möchtest. \n\n" +
             "> Solltest du Schwierigkeiten mit der Rechtschreibung haben, durch z.b eine Lese- und Rechtschreibschwäche, so kannst du dies gerne in deinem Antrag erwähnen. \n\n" +
             "Nimm dir außerdem Zeit. Wir möchten sehen, dass dir etwas an der Entbannung liegt. Schau also dass du alle Kriterien erfüllst. \n\n" +
-            "⚠️ Wenn der Entbannungsantrag nicht ordentlich bearbeitet wird, wird er abgelehnt! \n\n" +
+            "⚠️ Wenn der Entbannungsantrag nicht ordentlich bearbeitet wird, wird er abgelehnt! \n" +
+            "⚠️ Das verwenden einer AI/KI kann zu einer direkten Ablehnung führen. \n\n" +
             "🛑 Sollte dein Antrag abgelehnt werden, wirst du in der Regel für 3 Monate gesperrt. ");
         embed3.WithColor(color);
         embeds.Add(embed3.Build());
