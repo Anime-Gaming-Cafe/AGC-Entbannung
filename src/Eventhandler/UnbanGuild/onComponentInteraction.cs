@@ -35,6 +35,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(
                         new DiscordWebhookBuilder().WithContent("Prüfe, ob du gebannt bist..."));
                     await mainGuild.GetBanAsync(e.User.Id);
+                    await Task.Delay(1000);
                     isBanned = true;
                     await e.Interaction.EditOriginalResponseAsync(
                         new DiscordWebhookBuilder().WithContent("Du bist gebannt! Setze fort..."));
@@ -45,6 +46,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(
                         new DiscordWebhookBuilder().WithContent("Du bist nicht gebannt! Breche ab..."));
                     isBanned = false;
+                    await Task.Delay(500);
                 }
                 catch (Exception exception)
                 {
@@ -60,6 +62,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 var cons = Helperfunctions.DbString();
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Prüfe, ob du für Anträge gesperrt bist..."));
+                await Task.Delay(500);
                 await using var con = new NpgsqlConnection(cons);
                 await con.OpenAsync();
                 await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
@@ -69,9 +72,10 @@ public class onComponentInteraction : ApplicationCommandsModule
                 {
                     await e.Interaction.EditOriginalResponseAsync(
                         new DiscordWebhookBuilder().WithContent("Du bist für Anträge gesperrt!"));
+                    await Task.Delay(1000);
                     var embed = new DiscordEmbedBuilder();
                     embed.WithDescription(
-                        "Du bist für Anträge gesperrt. Du kannst keinen Entbannungsantrag stellen.");
+                        "Du bist aktuell für Anträge gesperrt. Du kannst keinen Entbannungsantrag stellen.");
                     embed.WithColor(DiscordColor.Red);
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
