@@ -80,6 +80,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
+
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Du bist nicht für Anträge gesperrt! Setze fort..."));
 
@@ -166,7 +167,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 var logChannel = await client.GetChannelAsync(logChannelId);
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Sperrzeit **abgefragt** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
-                
+
                 var cons = Helperfunctions.DbString();
                 try
                 {
@@ -181,8 +182,10 @@ public class onComponentInteraction : ApplicationCommandsModule
                     if (await reader.ReadAsync())
                     {
                         var expiresAt = reader.GetInt64(1);
-                        string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" + expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
-                        await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent(sperrstring));
+                        string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" +
+                                             expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent(sperrstring));
                     }
                     else
                     {
@@ -195,7 +198,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                     Console.WriteLine("An error occurred: " + ex.Message);
                     await ErrorReporting.SendErrorToDev(client, e.User, ex);
                 }
-
             }
 
 

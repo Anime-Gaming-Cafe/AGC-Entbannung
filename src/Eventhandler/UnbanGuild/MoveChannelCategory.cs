@@ -1,14 +1,15 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
-using Npgsql;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Eventhandler.UnbanGuild;
-
 
 [EventHandler]
 public class MoveChannelCategory : ApplicationCommandsModule
@@ -49,12 +50,9 @@ public class MoveChannelCategory : ApplicationCommandsModule
                     await e.Channel.ModifyAsync(x => x.Parent = newcat);
                 }
             }
-            
         });
 
-    
 
-
-    await Task.CompletedTask;
+        await Task.CompletedTask;
     }
 }

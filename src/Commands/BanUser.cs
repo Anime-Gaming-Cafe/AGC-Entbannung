@@ -2,7 +2,6 @@
 
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
-using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
@@ -10,9 +9,6 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.Exceptions;
 using DisCatSharp.Interactivity.Extensions;
-using Microsoft.Extensions.Logging;
-using Npgsql;
-
 
 #endregion
 
@@ -22,8 +18,9 @@ public sealed class BanUserCommand : ApplicationCommandsModule
 {
     [ApplicationCommandRequirePermissions(Permissions.Administrator)]
     [SlashCommand("ban", "Bannt einen User vom Server")]
-    public async Task BanMember(InteractionContext ctx, [Option("user", "Der User, der gebannt werden soll.")]
-        DiscordUser user, [Option("Grund", "Der Grund für den Ban")] string reason)
+    public async Task BanMember(InteractionContext ctx,
+        [Option("user", "Der User, der gebannt werden soll.")] DiscordUser user,
+        [Option("Grund", "Der Grund für den Ban")] string reason)
     {
         var caseid = Helperfunctions.GenerateCaseId();
         var embedBuilder = new DiscordEmbedBuilder()
