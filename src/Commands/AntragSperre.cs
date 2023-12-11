@@ -21,7 +21,7 @@ public class AntragSperre : ApplicationCommandsModule
     [SlashCommand("sperre", "Sperrt einen User von der Antragstellung für eine bestimmte Zeit.")]
     public static async Task SperreCommand(InteractionContext ctx,
         [Option("user", "Der User, der gesperrt werden soll.")]
-        DiscordUser user, [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4)] string antragsnummer,
+        DiscordUser user, [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer,
         [Option("grund", "Der Grund für die Sperre.")]
         string reason)
     {

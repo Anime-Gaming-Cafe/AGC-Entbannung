@@ -21,21 +21,12 @@ public class RevokeBan : ApplicationCommandsModule
     [ApplicationCommandRequirePermissions(Permissions.Administrator)]
     [SlashCommand("revokeban", "Entbannt einen User von AGC.")]
     public static async Task RevokeBanCommand(InteractionContext ctx,
-        [Option("user", "Der User, der entbannt werden soll.")]
-        DiscordUser user,
-        [Option("antragskanal", "Der Kanal, wo der Antrag durchgeführt wurde")]
-        DiscordChannel channel, [Option("Grund", "Der Grund für die Entbannung")] string reason)
+        [Option("user", "Der User, der entbannt werden soll.")] DiscordUser user , [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer, [Option("Grund", "Der Grund für die Entbannung")] string reason)
     {
         DiscordGuild mainGuild = await ctx.Client.GetGuildAsync(GlobalProperties.MainGuildId);
-        DiscordGuild unbanGuild = await ctx.Client.GetGuildAsync(GlobalProperties.UnbanServerId);
         DiscordBan? banentry;
-
-        if (!channel.Name.Contains("antrag") || channel.Name.Contains("antrag-stellen"))
-        {
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().WithContent("Dieser Channel ist kein Antrag!").AsEphemeral());
-            return;
-        }
+        
+        
 
         bool isBanned = false;
         try
@@ -115,7 +106,7 @@ public class RevokeBan : ApplicationCommandsModule
 
             await mainGuild.UnbanMemberAsync(user.Id, reason);
             var flagstring = $"Durch Antrag entbannt. \nUrsprünglicher Banngrund: ``{banreason}`` \n" +
-                             $"__Details:__\n Entbanngrund: ``{reason}``\n Antrags-ID: ``{channel.Name.Replace("-geschlossen", "")}``\n Entbannungszeitpunkt: {DateTimeOffset.Now.Timestamp()}\n Entbannung ausgeführt von: ``{ctx.User.UsernameWithDiscriminator}`` ({ctx.User.Id})";
+                             $"__Details:__\n Entbanngrund: ``{reason}``\n Antrags-ID: ``{antragsnummer}``\n Entbannungszeitpunkt: {DateTimeOffset.Now.Timestamp()}\n Entbannung ausgeführt von: ``{ctx.User.UsernameWithDiscriminator}`` ({ctx.User.Id})";
             await using var dbConnection =
                 new NpgsqlConnection(Helperfunctions.DbString());
             await dbConnection.OpenAsync();
