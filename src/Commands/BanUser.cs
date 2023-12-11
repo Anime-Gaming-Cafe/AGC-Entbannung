@@ -19,8 +19,10 @@ public sealed class BanUserCommand : ApplicationCommandsModule
     [ApplicationCommandRequirePermissions(Permissions.Administrator)]
     [SlashCommand("ban", "Bannt einen User vom Server")]
     public async Task BanMember(InteractionContext ctx,
-        [Option("user", "Der User, der gebannt werden soll.")] DiscordUser user,
-        [Option("Grund", "Der Grund für den Ban")] string reason)
+        [Option("user", "Der User, der gebannt werden soll.")]
+        DiscordUser user,
+        [Option("Grund", "Der Grund für den Ban")]
+        string reason)
     {
         var caseid = Helperfunctions.GenerateCaseId();
         var embedBuilder = new DiscordEmbedBuilder()

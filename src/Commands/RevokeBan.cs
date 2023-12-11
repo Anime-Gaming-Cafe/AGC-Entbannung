@@ -21,12 +21,14 @@ public class RevokeBan : ApplicationCommandsModule
     [ApplicationCommandRequirePermissions(Permissions.Administrator)]
     [SlashCommand("revokeban", "Entbannt einen User von AGC.")]
     public static async Task RevokeBanCommand(InteractionContext ctx,
-        [Option("user", "Der User, der entbannt werden soll.")] DiscordUser user , [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer, [Option("Grund", "Der Grund für die Entbannung")] string reason)
+        [Option("user", "Der User, der entbannt werden soll.")]
+        DiscordUser user,
+        [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer,
+        [Option("Grund", "Der Grund für die Entbannung")] string reason)
     {
         DiscordGuild mainGuild = await ctx.Client.GetGuildAsync(GlobalProperties.MainGuildId);
         DiscordBan? banentry;
-        
-        
+
 
         bool isBanned = false;
         try
