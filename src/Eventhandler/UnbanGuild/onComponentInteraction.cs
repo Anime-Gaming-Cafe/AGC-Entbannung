@@ -29,12 +29,14 @@ public class onComponentInteraction : ApplicationCommandsModule
                 DiscordGuild mainGuild = await client.GetGuildAsync(GlobalProperties.MainGuildId);
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
                     new DiscordInteractionResponseBuilder().AsEphemeral());
+                string? banreason = "";
                 bool isBanned = false;
                 try
                 {
                     await e.Interaction.EditOriginalResponseAsync(
                         new DiscordWebhookBuilder().WithContent("Prüfe, ob du gebannt bist..."));
-                    await mainGuild.GetBanAsync(e.User.Id);
+                    var be = await mainGuild.GetBanAsync(e.User.Id);
+                    banreason = be.Reason ?? "Kein Grund angegeben.";
                     await Task.Delay(1000);
                     isBanned = true;
                     await e.Interaction.EditOriginalResponseAsync(
@@ -102,6 +104,32 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
+                
+                if (banreason.ToLower().Contains("bannsystem | report-id:"))
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Bannsystem");
+                    embed.WithDescription(
+                        "Du wurdest vom globalen Bannsystem gebannt. Du kannst hier keinen Entbannungsantrag stellen. \n\n" +
+                        "Bitte wende dich an [Bannsystem Support](https://bannsystem.de) um deinen Bann zu klären. Dein Bann betrifft nicht nur AGC, sondern alle Server, die das Bannsystem nutzen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    try
+                    {
+                        ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
+                        var logChannel = await client.GetChannelAsync(logChannelId);
+                        await logChannel.SendMessageAsync(
+                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (BANNSYSTEM GEBANNT) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                    }
+                    catch (Exception exception)
+                    {
+                        await ErrorReporting.SendErrorToDev(client, e.User, exception);
+                        client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
+                    }
+                    return;
+                }
+                
+                
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
