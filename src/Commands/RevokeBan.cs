@@ -49,7 +49,32 @@ public class RevokeBan : ApplicationCommandsModule
                 new DiscordInteractionResponseBuilder().WithContent($"Der User ``{user.Id}`` ist nicht gebannt."));
             return;
         }
-
+        
+        // check if any channel contains the antragsnummer any
+        var channels = await mainGuild.GetChannelsAsync();
+        DiscordChannel channel = channels.FirstOrDefault(x => x.Name.Contains(antragsnummer));
+        if (channel == null)
+        {
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().WithContent(
+                    $"Es wurde kein Antrag mit der Antragsnummer ``{antragsnummer}`` gefunden."));
+            return;
+        }
+        var dbstring = Helperfunctions.DbString();
+        await using var conn = new NpgsqlConnection(dbstring);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT * FROM abstimmungen WHERE channel_id = @channelid", conn);
+        cmd.Parameters.AddWithValue("channelid", (long)channel.Id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().WithContent(
+                    $"Der Antrag mit der Antragsnummer ``{antragsnummer}`` ist noch in Abstimmung. Bitte warte bis die Abstimmung beendet ist."));
+            return;
+        }
+        await conn.CloseAsync();
+        
         var caseid = Helperfunctions.GenerateCaseId();
         var confirmEmbedBuilder = new DiscordEmbedBuilder()
             .WithTitle("Überprüfe deine Eingabe | Aktion: Entbannung")
