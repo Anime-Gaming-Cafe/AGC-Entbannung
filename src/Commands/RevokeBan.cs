@@ -51,8 +51,8 @@ public class RevokeBan : ApplicationCommandsModule
         }
         
         // check if any channel contains the antragsnummer any
-        var channels = await mainGuild.GetChannelsAsync();
-        DiscordChannel channel = channels.FirstOrDefault(x => x.Name.Contains(antragsnummer));
+        var channels = await ctx.Guild.GetChannelsAsync();
+        DiscordChannel? channel = channels.FirstOrDefault(x => x.Name.Contains(antragsnummer));
         if (channel == null)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
