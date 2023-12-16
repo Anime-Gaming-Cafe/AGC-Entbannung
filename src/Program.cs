@@ -113,6 +113,7 @@ internal sealed class Program
         _ = CheckTeamRole.Run(client);
         _ = CheckExpiredVotes.Run(client);
         _ = CheckExpiredBlock.Run(client);
+        _ = FillAutocompletions.Run(client);
     }
 
 

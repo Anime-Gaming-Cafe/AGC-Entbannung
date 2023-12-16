@@ -1,5 +1,6 @@
 ﻿#region
 
+using AGC_Entbannungssystem.AutocompletionProviders;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
@@ -24,7 +25,7 @@ public class RevokeBan : ApplicationCommandsModule
         [Option("user", "Der User, der entbannt werden soll.")]
         DiscordUser user,
         [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer,
-        [Option("Grund", "Der Grund für die Entbannung")] string reason)
+        [Autocomplete(typeof(RevokeBanCommandAutocompletionProvider))][Option("Grund", "Der Grund für die Entbannung", true)] string reason)
     {
         DiscordGuild mainGuild = await ctx.Client.GetGuildAsync(GlobalProperties.MainGuildId);
         DiscordBan? banentry;

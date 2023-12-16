@@ -1,5 +1,6 @@
 ﻿#region
 
+using AGC_Entbannungssystem.AutocompletionProviders;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
@@ -23,7 +24,7 @@ public class AntragSperre : ApplicationCommandsModule
         [Option("user", "Der User, der gesperrt werden soll.")]
         DiscordUser user,
         [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer,
-        [Option("grund", "Der Grund für die Sperre.")]
+        [Autocomplete(typeof(SperreCommandAutocompletionProvider))][Option("grund", "Der Grund für die Sperre.", true)]
         string reason)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
