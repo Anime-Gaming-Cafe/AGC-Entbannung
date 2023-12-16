@@ -1,10 +1,7 @@
 ﻿#region
 
-using System.Data.Common;
 using AGC_Entbannungssystem.Helpers;
-using AGC_Entbannungssystem.Services;
 using DisCatSharp;
-using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
@@ -14,8 +11,9 @@ namespace AGC_Entbannungssystem.Tasks;
 
 public static class FillAutocompletions
 {
-    public static List<string> SperreCompletions = new List<string>();
-    public static List<string> EntbannungsCompletions = new List<string>();
+    public static List<string> SperreCompletions = new();
+    public static List<string> EntbannungsCompletions = new();
+
     public static async Task Run(DiscordClient client)
     {
         while (true)
@@ -35,20 +33,18 @@ public static class FillAutocompletions
 
                 await reader.CloseAsync();
                 await con.CloseAsync();
-                
+
                 await using var con2 = new NpgsqlConnection(consting);
                 await con2.OpenAsync();
 
-                await using var cmd2 = new NpgsqlCommand("SELECT data FROM autocompletions WHERE type = 'entbannung'", con2);
+                await using var cmd2 =
+                    new NpgsqlCommand("SELECT data FROM autocompletions WHERE type = 'entbannung'", con2);
                 await using var reader2 = await cmd2.ExecuteReaderAsync();
                 EntbannungsCompletions.Clear();
                 while (await reader2.ReadAsync())
                 {
                     EntbannungsCompletions.Add(reader2.GetString(0));
                 }
-
-                
-
             }
             catch (Exception err)
             {

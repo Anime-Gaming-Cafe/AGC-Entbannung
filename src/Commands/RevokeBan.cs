@@ -24,8 +24,11 @@ public class RevokeBan : ApplicationCommandsModule
     public static async Task RevokeBanCommand(InteractionContext ctx,
         [Option("user", "Der User, der entbannt werden soll.")]
         DiscordUser user,
-        [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer,
-        [Autocomplete(typeof(RevokeBanCommandAutocompletionProvider))][Option("Grund", "Der Grund für die Entbannung", true)] string reason)
+        [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)]
+        string antragsnummer,
+        [Autocomplete(typeof(RevokeBanCommandAutocompletionProvider))]
+        [Option("Grund", "Der Grund für die Entbannung", true)]
+        string reason)
     {
         DiscordGuild mainGuild = await ctx.Client.GetGuildAsync(GlobalProperties.MainGuildId);
         DiscordBan? banentry;
@@ -50,7 +53,7 @@ public class RevokeBan : ApplicationCommandsModule
                 new DiscordInteractionResponseBuilder().WithContent($"Der User ``{user.Id}`` ist nicht gebannt."));
             return;
         }
-        
+
         // check if any channel contains the antragsnummer any
         var channels = await ctx.Guild.GetChannelsAsync();
         DiscordChannel? channel = channels.FirstOrDefault(x => x.Name.Contains(antragsnummer));
@@ -61,6 +64,7 @@ public class RevokeBan : ApplicationCommandsModule
                     $"Es wurde kein Antrag mit der Antragsnummer ``{antragsnummer}`` gefunden."));
             return;
         }
+
         var dbstring = Helperfunctions.DbString();
         await using var conn = new NpgsqlConnection(dbstring);
         await conn.OpenAsync();
@@ -74,8 +78,9 @@ public class RevokeBan : ApplicationCommandsModule
                     $"Der Antrag mit der Antragsnummer ``{antragsnummer}`` ist noch in Abstimmung. Bitte warte bis die Abstimmung beendet ist."));
             return;
         }
+
         await conn.CloseAsync();
-        
+
         var caseid = Helperfunctions.GenerateCaseId();
         var confirmEmbedBuilder = new DiscordEmbedBuilder()
             .WithTitle("Überprüfe deine Eingabe | Aktion: Entbannung")

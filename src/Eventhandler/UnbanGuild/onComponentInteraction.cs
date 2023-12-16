@@ -104,7 +104,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
-                
+
                 if (banreason.ToLower().Contains("bannsystem | report-id:"))
                 {
                     var embed = new DiscordEmbedBuilder();
@@ -126,10 +126,10 @@ public class onComponentInteraction : ApplicationCommandsModule
                         await ErrorReporting.SendErrorToDev(client, e.User, exception);
                         client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
                     }
+
                     return;
                 }
-                
-                
+
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",

@@ -23,8 +23,9 @@ public class AntragSperre : ApplicationCommandsModule
     public static async Task SperreCommand(InteractionContext ctx,
         [Option("user", "Der User, der gesperrt werden soll.")]
         DiscordUser user,
-        [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)] string antragsnummer,
-        [Autocomplete(typeof(SperreCommandAutocompletionProvider))][Option("grund", "Der Grund für die Sperre.", true)]
+        [Option("antragsnummer", "Die Antragsnummer."), MinimumLength(4), MaximumLength(4)]
+        string antragsnummer,
+        [Autocomplete(typeof(SperreCommandAutocompletionProvider))] [Option("grund", "Der Grund für die Sperre.", true)]
         string reason)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
