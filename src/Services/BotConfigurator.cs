@@ -21,6 +21,7 @@ public class BotConfigurator
         {
             Console.WriteLine("The configuration file could not be loaded. Please check the config.");
             Console.WriteLine("Press any key to exit the program.");
+            Console.WriteLine("Current Working Directory: " + Directory.GetCurrentDirectory());
             Console.ReadKey();
             Environment.Exit(12);
             return null;

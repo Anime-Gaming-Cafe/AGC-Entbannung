@@ -41,14 +41,7 @@ internal sealed class Program
     private static async Task MainAsync()
     {
         var logger = Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug().Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Heartbeat"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Updating hash"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Bucket cleaner task"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Request for user rate limit"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Request for user rate limit bucket"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("unused bucket"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Initial request"))
-            .Filter.ByExcluding(x => x.MessageTemplate.Text.Contains("Socket handler suppressed an exception"))
+            .MinimumLevel.Debug()
             .WriteTo.Console()
             .CreateLogger();
         logger.Information("Starting AGC_Entbannungssystem...");
@@ -91,7 +84,8 @@ internal sealed class Program
         var slash = client.UseApplicationCommands(new ApplicationCommandsConfiguration
         {
             ServiceProvider = serviceProvider,
-            EnableDefaultHelp = false
+            EnableDefaultHelp = false,
+            CheckAllGuilds = true, DebugStartup = true
         });
         ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
         slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
