@@ -29,7 +29,7 @@ public class MoveChannelCategory : ApplicationCommandsModule
                 "bannsystem"
             };
             // check if guild is unban guild
-            if (e.Guild.Id != GlobalProperties.UnbanServerId) return;
+            if (e.Guild?.Id != GlobalProperties.UnbanServerId) return;
             if (e.Channel.Name.StartsWith("antrag-") && !e.Channel.Name.EndsWith("-geschlossen"))
             {
                 if (e.Message.Author.IsBot) return;
