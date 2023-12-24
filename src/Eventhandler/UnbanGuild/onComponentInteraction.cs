@@ -157,8 +157,9 @@ public class onComponentInteraction : ApplicationCommandsModule
                 var logChannel = await client.GetChannelAsync(logChannelId);
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().AsEphemeral());
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                    new DiscordInteractionResponseBuilder().WithContent("Hinweise wurden Akzeptiert. Fahre fort..."));
+                await Task.Delay(2000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
                 var appealrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
