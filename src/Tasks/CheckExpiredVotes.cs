@@ -103,7 +103,7 @@ public class CheckExpiredVotes
                     emb.WithDescription(resultString + antragStatus);
                     emb.WithColor(embedColor);
                     emb.WithTimestamp(DateTimeOffset.UtcNow);
-                    await msg.RespondAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId")}>",
+                    await msg.RespondAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>",
                         emb);
                 }
 

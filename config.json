@@ -8,6 +8,7 @@
     "UnbanGuildTeamRoleId": "RoleID",
     "LogChannelId": "ChannelID",
     "AppealRoleId": "RoleID",
+    "PingRoleId": "RoleID",
     "SyncIgnoredRoleList": "RoleID, RoleID, RoleID",
     "AbstimmungsChannelId": "ChannelID",
     "VoteCategoryChannelId": "ChannelID",

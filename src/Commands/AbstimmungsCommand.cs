@@ -60,7 +60,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
         var votechannelmessage =
-            await votechannel.SendMessageAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId")}>",
+            await votechannel.SendMessageAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>",
                 embed);
 
         //move channel to vote category
