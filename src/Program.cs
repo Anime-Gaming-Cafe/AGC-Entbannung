@@ -175,6 +175,8 @@ public static class GlobalProperties
     public static ulong UnbanServerId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
     public static ulong MainGuildId { get; } = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "MainServerId"));
 
+    public static ulong PingRoleId { get; } =
+        ulong.Parse(BotConfigurator.GetConfig("MainConfig", "PingRoleId"));
     public static ulong DevGuildId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperServerId"));
 

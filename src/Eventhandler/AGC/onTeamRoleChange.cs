@@ -21,6 +21,7 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
     {
         if (CurrentApplicationData.isReady == false) return;
         if (args.Guild.Id != GlobalProperties.MainGuildId) return;
+        if (args.RolesBefore.Any(role => role.Id == GlobalProperties.MainGuildTeamRoleId) && args.RolesAfter.Any(role => role.Id == GlobalProperties.MainGuildTeamRoleId)) return;
 
         _ = Task.Run(async () =>
         {
@@ -49,16 +50,22 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
                 {
                     DiscordGuild unbanGuild = await client.GetGuildAsync(GlobalProperties.UnbanServerId);
                     DiscordRole unbanTeamRole = unbanGuild.GetRole(GlobalProperties.UnbanServerTeamRoleId);
+                    DiscordRole pingRole = unbanGuild.GetRole(GlobalProperties.PingRoleId);
                     await unbanGuild.Members[args.Member.Id]
                         .GrantRoleAsync(unbanTeamRole, "Teamrolle auf dem Hauptserver erhalten.");
+                    await unbanGuild.Members[args.Member.Id].GrantRoleAsync(pingRole,
+                        "Teamrolle auf dem Hauptserver erhalten.");
                 }
                 else if (args.RolesBefore.Any(x => x.Id == GlobalProperties.MainGuildTeamRoleId))
                 {
                     DiscordGuild unbanGuild = await client.GetGuildAsync(GlobalProperties.UnbanServerId);
                     DiscordRole unbanTeamRole = unbanGuild.GetRole(GlobalProperties.UnbanServerTeamRoleId);
+                    DiscordRole pingRole = unbanGuild.GetRole(GlobalProperties.PingRoleId);
                     if (!unbanGuild.Members.ContainsKey(args.Member.Id)) return;
                     await unbanGuild.Members[args.Member.Id]
                         .RevokeRoleAsync(unbanTeamRole, "Teamrolle auf dem Hauptserver verloren.");
+                    await unbanGuild.Members[args.Member.Id].RevokeRoleAsync(pingRole,
+                        "Teamrolle auf dem Hauptserver verloren.");
                 }
             }
             catch (Exception err)
