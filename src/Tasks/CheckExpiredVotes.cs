@@ -19,14 +19,14 @@ public class CheckExpiredVotes
         {
             try
             {
-                var dbstring = Helperfunctions.DbString();
+                String dbstring = Helperfunctions.DbString();
                 await using var conn = new NpgsqlConnection(dbstring);
                 await conn.OpenAsync();
-                await using var cmd = new NpgsqlCommand();
+                await using NpgsqlCommand cmd = new NpgsqlCommand();
                 cmd.Connection = conn;
                 cmd.CommandText = "SELECT * FROM abstimmungen WHERE expires_at < @endtime";
                 cmd.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                await using var reader = await cmd.ExecuteReaderAsync();
+                await using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
                 // get all expired votes
                 while (await reader.ReadAsync())
                 {
@@ -35,12 +35,12 @@ public class CheckExpiredVotes
                     var channelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
 
                     // get messages from id in vote channel
-                    var votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
-                    var votechannel = await client.GetChannelAsync(votechannelid);
-                    var message = await votechannel.GetMessageAsync(messageid);
-                    var emb = new DiscordEmbedBuilder();
+                    ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
+                    DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
+                    DiscordMessage message = await votechannel.GetMessageAsync(messageid);
+                    DiscordEmbedBuilder emb = new DiscordEmbedBuilder();
 
-                    var reactions = message.Reactions;
+                    IReadOnlyList<DiscordReaction> reactions = message.Reactions;
                     int positiveVotes = 0;
                     int negativeVotes = 0;
                     foreach (var reaction in reactions)
@@ -56,7 +56,7 @@ public class CheckExpiredVotes
                     }
 
                     // get channel from id
-                    var channel = await client.GetChannelAsync(channelid);
+                    DiscordChannel channel = await client.GetChannelAsync(channelid);
                     DiscordChannel? antragc = null;
                     try
                     {
@@ -69,12 +69,12 @@ public class CheckExpiredVotes
 
 
                     // get message from id
-                    var msg = await channel.GetMessageAsync(messageid);
+                    DiscordMessage msg = await channel.GetMessageAsync(messageid);
                     // remove all reactions from message
                     await msg.DeleteAllReactionsAsync();
 
 
-                    var resultString = $"**Ergebnis der Abstimmung für {antragc?.Name} ({antragc?.Mention}):**\n" +
+                    String resultString = $"**Ergebnis der Abstimmung für {antragc?.Name} ({antragc?.Mention}):**\n" +
                                        $"**{positiveVotes}** Stimmen für **Ja**\n" +
                                        $"**{negativeVotes}** Stimmen für **Nein**\n" +
                                        $"**{positiveVotes + negativeVotes}** Stimmen insgesamt\n\n";
