@@ -26,6 +26,11 @@
   "EmbedConfig": {
     "DefaultEmbedColor": "FFFFFF"
   },
+  "ModHQConfig": {
+    "BannSystemEnabled": "false",
+    "API_Key": "",
+    "API_URL": ""
+  },
   "Database": {
     "DatabaseName": "DatabaseName",
     "DatabaseUser": "DatabaseUser",

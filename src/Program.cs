@@ -191,4 +191,7 @@ public static class GlobalProperties
 
     public static ulong UnbanServerTeamRoleId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"));
+    
+    public static bool isBannSystemEnabled { get; } =
+        bool.Parse(BotConfigurator.GetConfig("ModHQConfig", "BannSystemEnabled"));
 }

@@ -1,5 +1,6 @@
 ﻿#region
 
+using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
@@ -60,6 +61,43 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
+                
+                // bs check start
+                var bsreportlist = new List<BannSystemReport>();
+                bool bs_status = false;
+                if (GlobalProperties.isBannSystemEnabled)
+                {
+                    try
+                    {
+                        bsreportlist = await Helperfunctions.BSReportToWarn(e.User);
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    try
+                    {
+                        bs_status = Helperfunctions.HasActiveBannSystemReport(bsreportlist);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                // bs check end
+
+                if (bs_status)
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Bannsystem");
+                    embed.WithDescription(
+                        "Du wurdest vom globalen Bannsystem gebannt. Du kannst hier keinen Entbannungsantrag stellen. \n\n" +
+                        "Bitte wende dich an [Bannsystem Support](https://bannsystem.de) um deinen Bann zu klären. Dein Bann betrifft nicht nur AGC, sondern alle Server, die das Bannsystem nutzen. Nachdem dein Bann aufgehoben wurde, kannst du - wenn nicht Entbannt - einen Entbannungsantrag stellen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    return;
+                }
+                
+                
 
                 var cons = Helperfunctions.DbString();
                 await e.Interaction.EditOriginalResponseAsync(

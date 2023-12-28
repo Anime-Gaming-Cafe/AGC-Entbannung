@@ -1,5 +1,6 @@
 ﻿#region
 
+using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Helpers;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
@@ -55,12 +56,39 @@ public sealed class CheckBan : ApplicationCommandsModule
             embed.WithTitle("Der User ist gebannt.");
             embed.WithDescription($"Grund: ```{reason}```");
             embed.WithColor(DiscordColor.Red);
+
+            var bsreportlist = new List<BannSystemReport>();
+            bool bs_status = false;
+            if (GlobalProperties.isBannSystemEnabled)
+            {
+                try
+                {
+                    bsreportlist = await Helperfunctions.BSReportToWarn(user);
+                }
+                catch (Exception)
+                {
+                }
+
+                try
+                {
+                    bs_status = Helperfunctions.HasActiveBannSystemReport(bsreportlist);
+                }
+                catch (Exception)
+                {
+                }
+
+                if (bs_status)
+                {
+                    embed.AddField(new DiscordEmbedField("Bannsystem",
+                        "Der User hat aktive Bannsystem-Banns. Bitte auf AGC Prüfen!"));
+                }
+            }
+
+            embed.WithTimestamp(DateTimeOffset.Now);
+            embed.WithFooter("Bericht angefordert von " + ctx.User.Username, ctx.User.AvatarUrl);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().AddEmbed(embed));
         }
-
-        embed.WithTimestamp(DateTimeOffset.Now);
-        embed.WithFooter("Bericht angefordert von " + ctx.User.Username, ctx.User.AvatarUrl);
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder().AddEmbed(embed));
     }
 }
