@@ -25,9 +25,9 @@ public static class Helperfunctions
         string dbhost = BotConfigurator.GetConfig("Database", "DatabaseHost");
         return $"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}";
     }
-    
-    
-        public static async Task<List<BannSystemReport?>?> GetBannsystemReports(DiscordUser user)
+
+
+    public static async Task<List<BannSystemReport?>?> GetBannsystemReports(DiscordUser user)
     {
         using HttpClient client = new();
         string apiKey = BotConfigurator.GetConfig("ModHQConfig", "API_Key");
@@ -68,13 +68,10 @@ public static class Helperfunctions
 
         return new List<BannSystemReport>();
     }
-    
 
 
     public static bool HasActiveBannSystemReport(List<BannSystemReport> reports)
     {
         return reports.Any(report => report.active);
     }
-    
-    
 }

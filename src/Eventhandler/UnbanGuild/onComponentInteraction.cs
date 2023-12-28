@@ -61,7 +61,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
-                
+
                 // bs check start
                 var bsreportlist = new List<BannSystemReport>();
                 bool bs_status = false;
@@ -96,8 +96,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
-                
-                
+
 
                 var cons = Helperfunctions.DbString();
                 await e.Interaction.EditOriginalResponseAsync(

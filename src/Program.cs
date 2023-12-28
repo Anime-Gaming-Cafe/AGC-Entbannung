@@ -177,6 +177,7 @@ public static class GlobalProperties
 
     public static ulong PingRoleId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "PingRoleId"));
+
     public static ulong DevGuildId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("ErrorTracking", "DeveloperServerId"));
 
@@ -191,7 +192,7 @@ public static class GlobalProperties
 
     public static ulong UnbanServerTeamRoleId { get; } =
         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanGuildTeamRoleId"));
-    
+
     public static bool isBannSystemEnabled { get; } =
         bool.Parse(BotConfigurator.GetConfig("ModHQConfig", "BannSystemEnabled"));
 }

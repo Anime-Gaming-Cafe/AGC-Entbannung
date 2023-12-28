@@ -17,7 +17,8 @@ public sealed class UploadTranscript : ApplicationCommandsModule
     [ApplicationRequireStaffRole]
     [SlashCommand("uploadtranscript", "Lädt ein Transkript auf unseren Webserver hoch. (Bspw. für Bannsystem)")]
     public static async Task UploadTranscriptCommand(InteractionContext ctx,
-        [Option("Transkript", "Die Transcript URL")] string transcripturl)
+        [Option("Transkript", "Die Transcript URL")]
+        string transcripturl)
     {
         string path = BotConfigurator.GetConfig("MainConfig", "BackupTranscriptPath");
         if (!transcripturl.Contains("https://"))

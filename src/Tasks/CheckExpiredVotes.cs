@@ -19,7 +19,7 @@ public class CheckExpiredVotes
         {
             try
             {
-                String dbstring = Helperfunctions.DbString();
+                string dbstring = Helperfunctions.DbString();
                 await using var conn = new NpgsqlConnection(dbstring);
                 await conn.OpenAsync();
                 await using NpgsqlCommand cmd = new NpgsqlCommand();
@@ -74,10 +74,10 @@ public class CheckExpiredVotes
                     await msg.DeleteAllReactionsAsync();
 
 
-                    String resultString = $"**Ergebnis der Abstimmung für {antragc?.Name} ({antragc?.Mention}):**\n" +
-                                       $"**{positiveVotes}** Stimmen für **Ja**\n" +
-                                       $"**{negativeVotes}** Stimmen für **Nein**\n" +
-                                       $"**{positiveVotes + negativeVotes}** Stimmen insgesamt\n\n";
+                    string resultString = $"**Ergebnis der Abstimmung für {antragc?.Name} ({antragc?.Mention}):**\n" +
+                                          $"**{positiveVotes}** Stimmen für **Ja**\n" +
+                                          $"**{negativeVotes}** Stimmen für **Nein**\n" +
+                                          $"**{positiveVotes + negativeVotes}** Stimmen insgesamt\n\n";
 
 
                     DiscordColor embedColor;

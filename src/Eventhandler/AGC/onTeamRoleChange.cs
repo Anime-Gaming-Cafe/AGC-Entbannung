@@ -21,7 +21,8 @@ public sealed class onTeamRoleChange : ApplicationCommandsModule
     {
         if (CurrentApplicationData.isReady == false) return;
         if (args.Guild.Id != GlobalProperties.MainGuildId) return;
-        if (args.RolesBefore.Any(role => role.Id == GlobalProperties.MainGuildTeamRoleId) && args.RolesAfter.Any(role => role.Id == GlobalProperties.MainGuildTeamRoleId)) return;
+        if (args.RolesBefore.Any(role => role.Id == GlobalProperties.MainGuildTeamRoleId) &&
+            args.RolesAfter.Any(role => role.Id == GlobalProperties.MainGuildTeamRoleId)) return;
 
         _ = Task.Run(async () =>
         {
