@@ -83,6 +83,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     {
                     }
                 }
+
                 // bs check end
                 if (bs_status)
                 {
@@ -105,6 +106,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                         await ErrorReporting.SendErrorToDev(client, e.User, exception);
                         client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
                     }
+
                     return;
                 }
 
