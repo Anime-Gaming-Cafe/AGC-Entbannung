@@ -84,7 +84,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                     }
                 }
                 // bs check end
-
                 if (bs_status)
                 {
                     var embed = new DiscordEmbedBuilder();
@@ -94,6 +93,18 @@ public class onComponentInteraction : ApplicationCommandsModule
                         "Bitte wende dich an [Bannsystem Support](https://bannsystem.de) um deinen Bann zu klären. Dein Bann betrifft nicht nur AGC, sondern alle Server, die das Bannsystem nutzen. Nachdem dein Bann aufgehoben wurde, kannst du - wenn nicht Entbannt - einen Entbannungsantrag stellen.");
                     embed.WithColor(DiscordColor.Red);
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    try
+                    {
+                        ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
+                        var logChannel = await client.GetChannelAsync(logChannelId);
+                        await logChannel.SendMessageAsync(
+                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (BANNSYSTEM GEBANNT | DB Check) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                    }
+                    catch (Exception exception)
+                    {
+                        await ErrorReporting.SendErrorToDev(client, e.User, exception);
+                        client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
+                    }
                     return;
                 }
 
@@ -156,7 +167,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                         ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                         var logChannel = await client.GetChannelAsync(logChannelId);
                         await logChannel.SendMessageAsync(
-                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (BANNSYSTEM GEBANNT) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (BANNSYSTEM GEBANNT | Reason String check) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
                     }
                     catch (Exception exception)
                     {
