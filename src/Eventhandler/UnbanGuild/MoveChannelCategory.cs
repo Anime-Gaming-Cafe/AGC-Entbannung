@@ -26,7 +26,8 @@ public class MoveChannelCategory : ApplicationCommandsModule
                 "deny2",
                 "deny13",
                 "deny24",
-                "bannsystem"
+                "bannsystem",
+                "noai2"
             };
             // check if guild is unban guild
             if (e.Guild?.Id != GlobalProperties.UnbanServerId) return;
