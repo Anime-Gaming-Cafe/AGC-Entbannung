@@ -83,7 +83,11 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             eb.WithColor(DiscordColor.Red);
         }
         eb.WithDescription($"**Status:** {Helperfunctions.BoolToEmoji(isUnbanned(status))}\n**Bearbeitet von:** {ctx.User.Mention} ({ctx.User.Id}) \n**Antragsnummer:** {antragsnummer}\n**Betroffener User:** {user.Mention} ({user.Id})\n**Grund:** {grund}");
-
+        eb.WithFooter("Entbannungssystem", ctx.User.AvatarUrl);
+        eb.WithTimestamp(DateTimeOffset.Now);
+        var chid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "HistoryChannelId"));
+        var ch = await ctx.Client.GetChannelAsync(chid);
+        await ch.SendMessageAsync(embed: eb);
     }
     
     private static bool isUnbanned(string value)
