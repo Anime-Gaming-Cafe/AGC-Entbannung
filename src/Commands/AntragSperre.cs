@@ -65,6 +65,7 @@ public class AntragSperre : ApplicationCommandsModule
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent(
                 "Der User ist nicht gesperrt. Sperre den User für die angegebene Zeit..."));
+        await Task.Delay(1000);
         try
         {
             DiscordMember member = await ctx.Guild.GetMemberAsync(user.Id);
