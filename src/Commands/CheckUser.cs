@@ -14,10 +14,10 @@ using DisCatSharp.Exceptions;
 
 namespace AGC_Entbannungssystem.Commands;
 
-public sealed class CheckBan : ApplicationCommandsModule
+public sealed class CheckUser : ApplicationCommandsModule
 {
     [ApplicationRequireStaffRole]
-    [SlashCommand("checkban", "Überprüft, ob und warum ein User auf AGC gebannt ist.")]
+    [SlashCommand("checkuser", "Überprüft den Nutzer.")]
     public static async Task CheckBanCommand(InteractionContext ctx,
         [Option("user", "Der User, der überprüft werden soll.")]
         DiscordUser user)
