@@ -4,6 +4,7 @@ using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp.Entities;
 using Newtonsoft.Json;
+using Npgsql;
 
 #endregion
 
@@ -67,6 +68,30 @@ public static class Helperfunctions
         }
 
         return new List<BannSystemReport>();
+    }
+
+    public static async Task<List<AntragshistorieDaten>> GetAntragshistorie(DiscordUser user)
+    {
+        var constring = DbString();
+        await using var con = new NpgsqlConnection(constring);
+        await con.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT * FROM antragsverlauf WHERE user_id = @userid", con);
+        cmd.Parameters.AddWithValue("userid", (long)user.Id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var data = new List<AntragshistorieDaten>();
+        while (await reader.ReadAsync())
+        {
+            data.Add(new AntragshistorieDaten
+            {
+                user_id = reader.GetInt64(0),
+                antragsnummer = reader.GetString(1),
+                unbanned = reader.GetBoolean(2),
+                grund = reader.GetString(3),
+                mod_id = reader.GetInt64(4),
+                timestamp = reader.GetInt64(5)
+            });
+        }
+        return data;
     }
 
 
