@@ -72,8 +72,10 @@ public sealed class CheckUser : ApplicationCommandsModule
         {
             foreach (var antrag in antragshistorie)
             {
+                var mod = await ctx.Client.GetUserAsync((ulong)antrag.mod_id);
+                long timestamp = antrag.timestamp;
                 description +=
-                    $"{Helperfunctions.BoolToEmoji(antrag.unbanned)} - ``{antrag.antragsnummer}`` - ``{antrag.grund}`` - {await ctx.Client.GetUserAsync((ulong)antrag.mod_id)} - <t:{antrag.timestamp}:f> (<t:{antrag.timestamp}:R>) \n";
+                    $"{Helperfunctions.BoolToEmoji(antrag.unbanned)} - ``{antrag.antragsnummer}`` - ``{antrag.grund}`` - {mod.Id} - <t:{timestamp}:f> (<t:{timestamp}:R>) \n";
             }
         }
 
