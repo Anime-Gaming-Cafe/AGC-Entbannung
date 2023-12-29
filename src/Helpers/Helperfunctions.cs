@@ -91,10 +91,11 @@ public static class Helperfunctions
                 timestamp = reader.GetInt64(5)
             });
         }
+
         return data;
     }
 
-    
+
     public static string BoolToEmoji(bool value)
     {
         return value ? "<:angenommen:1190335045341282314>" : "<:abgelehnt:1190335046591205426>";

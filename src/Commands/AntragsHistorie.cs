@@ -1,4 +1,6 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿#region
+
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
@@ -6,6 +8,8 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using Npgsql;
+
+#endregion
 
 namespace AGC_Entbannungssystem.Commands;
 
@@ -19,8 +23,10 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
         [Choice("Angenommen", "Angenommen")]
         [Choice("Abgelehnt", "Abgelehnt")]
         string status, [Option("Antragsnummer", "Die Antragsnummer")] string antragsnummer,
-        [Option("User", "Der User, der den Antrag gestellt hat")] DiscordUser user,
-        [Option("Antragsgrund", "Der Grund für die Entscheidung")] string grund)
+        [Option("User", "Der User, der den Antrag gestellt hat")]
+        DiscordUser user,
+        [Option("Antragsgrund", "Der Grund für die Entscheidung")]
+        string grund)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
@@ -29,13 +35,14 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe Eingaben..."));
         await Task.Delay(1000);
-        
+
         if (!antragsnummer.All(char.IsDigit))
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent("⚠️ Die Antragsnummer ist ungültig!"));
             return;
         }
+
         // check if antragsnummer already exists
         await using var con = new NpgsqlConnection(constring);
         await con.OpenAsync();
@@ -48,6 +55,7 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
                 new DiscordWebhookBuilder().WithContent("⚠️ Die Antragsnummer existiert bereits!"));
             return;
         }
+
         // begin to write to db
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Schreibe in die Datenbank..."));
@@ -82,17 +90,18 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             eb.WithTitle("Antrag wurde abgelehnt!");
             eb.WithColor(DiscordColor.Red);
         }
-        eb.WithDescription($"**Status:** {Helperfunctions.BoolToEmoji(isUnbanned(status))}\n**Bearbeitet von:** {ctx.User.Mention} ({ctx.User.Id}) \n**Antragsnummer:** {antragsnummer}\n**Betroffener User:** {user.Mention} ({user.Id})\n**Grund:** {grund}");
+
+        eb.WithDescription(
+            $"**Status:** {Helperfunctions.BoolToEmoji(isUnbanned(status))}\n**Bearbeitet von:** {ctx.User.Mention} ({ctx.User.Id}) \n**Antragsnummer:** {antragsnummer}\n**Betroffener User:** {user.Mention} ({user.Id})\n**Grund:** {grund}");
         eb.WithFooter("Entbannungssystem", ctx.User.AvatarUrl);
         eb.WithTimestamp(DateTimeOffset.Now);
         var chid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "HistoryChannelId"));
         var ch = await ctx.Client.GetChannelAsync(chid);
-        await ch.SendMessageAsync(embed: eb);
+        await ch.SendMessageAsync(eb);
     }
-    
+
     private static bool isUnbanned(string value)
     {
         return value == "Angenommen";
     }
-
 }

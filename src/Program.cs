@@ -69,7 +69,7 @@ internal sealed class Program
             Intents = DiscordIntents.All,
             DeveloperUserId = GlobalProperties.BotOwnerId,
             MinimumLogLevel = LogLevel.Debug,
-            ServiceProvider = serviceProvider, 
+            ServiceProvider = serviceProvider,
             ShowReleaseNotesInUpdateCheck = false
         });
 
