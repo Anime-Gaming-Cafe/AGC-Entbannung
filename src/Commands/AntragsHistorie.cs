@@ -70,6 +70,20 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
         await cmd2.ExecuteNonQueryAsync();
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("✅ Antrag wurde erfolgreich eingetragen!"));
+
+        var eb = new DiscordEmbedBuilder();
+        if (isUnbanned(status))
+        {
+            eb.WithTitle("Antrag wurde angenommen!");
+            eb.WithColor(DiscordColor.Green);
+        }
+        else
+        {
+            eb.WithTitle("Antrag wurde abgelehnt!");
+            eb.WithColor(DiscordColor.Red);
+        }
+        eb.WithDescription($"**Status:** {Helperfunctions.BoolToEmoji(isUnbanned(status))}\n**Bearbeitet von:** {ctx.User.Mention} ({ctx.User.Id}) \n**Antragsnummer:** {antragsnummer}\n**Betroffener User:** {user.Mention} ({user.Id})\n**Grund:** {grund}");
+
     }
     
     private static bool isUnbanned(string value)

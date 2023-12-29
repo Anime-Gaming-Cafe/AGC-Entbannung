@@ -9,6 +9,7 @@
     "LogChannelId": "ChannelID",
     "AppealRoleId": "RoleID",
     "PingRoleId": "RoleID",
+    "HistoryChannelId": "ChannelID",
     "SyncIgnoredRoleList": "RoleID, RoleID, RoleID",
     "AbstimmungsChannelId": "ChannelID",
     "VoteCategoryChannelId": "ChannelID",
