@@ -59,7 +59,7 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
         await using var con2 = new NpgsqlConnection(constring);
         await con2.OpenAsync();
         await using var cmd2 = new NpgsqlCommand(
-            "INSERT INTO antragsverlauf (antrags_id, user_id, mod_id, timestamp, unbanned, reason) VALUES (@antragsnummer, @userid, @modid, @timestamp, @isunbanned, @grund)",
+            "INSERT INTO antragsverlauf (antrags_id, user_id, mod_id, timestamp, entbannt, reason) VALUES (@antragsnummer, @userid, @modid, @timestamp, @isunbanned, @grund)",
             con2);
         cmd2.Parameters.AddWithValue("antragsnummer", antragsnummer);
         cmd2.Parameters.AddWithValue("userid", userid);
