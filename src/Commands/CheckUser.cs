@@ -75,7 +75,7 @@ public sealed class CheckUser : ApplicationCommandsModule
                 var mod = await ctx.Client.GetUserAsync((ulong)antrag.mod_id);
                 long timestamp = antrag.timestamp;
                 description +=
-                    $"{Helperfunctions.BoolToEmoji(antrag.unbanned)} - ``{antrag.antragsnummer}`` - ``{antrag.grund}`` - {mod.Id} - <t:{timestamp}:f> (<t:{timestamp}:R>) \n";
+                    $"{Helperfunctions.BoolToEmoji(antrag.unbanned)} - ``{antrag.antragsnummer}`` - ``{antrag.grund}`` - {mod.Mention} ({mod.Id}) - <t:{timestamp}:f> (<t:{timestamp}:R>) \n";
             }
         }
 
