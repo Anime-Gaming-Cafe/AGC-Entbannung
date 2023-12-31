@@ -147,7 +147,7 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             await Task.Delay(100);
         }
         eb.WithTitle($"Letzte {i} Anträge");
-        eb.WithFooter($"Entbannt: {pos} | Nicht: {neg}");
+        eb.WithFooter($"Entbannt: {pos} | Nicht Entbannt: {neg}");
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().AddEmbed(eb));
