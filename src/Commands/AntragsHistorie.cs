@@ -99,6 +99,59 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
         var ch = await ctx.Client.GetChannelAsync(chid);
         await ch.SendMessageAsync(eb);
     }
+    
+    [SlashCommand("recent", "Zeigt die letzten 5 Anträge an.")]
+    public static async Task RecentAnträge(InteractionContext ctx)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+            new DiscordInteractionResponseBuilder().AsEphemeral());
+        var constring = Helperfunctions.DbString();
+        await ctx.EditResponseAsync(
+            new DiscordWebhookBuilder().WithContent("Lade Daten... <a:agcutils_loading:952604537515024514>"));
+        await Task.Delay(1000);
+        await using var con = new NpgsqlConnection(constring);
+        await con.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT * FROM antragsverlauf ORDER BY timestamp DESC LIMIT 5", con);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var eb = new DiscordEmbedBuilder();
+        eb.WithColor(DiscordColor.Blurple);
+        // schema user_id bigint, antrags_id varchar, entbannt boolean, reason text, mod_id bigint, timestamp bigint
+        int i = 0;
+        int pos = 0;
+        int neg = 0;
+        while (await reader.ReadAsync())
+        {
+            var user = await ctx.Client.GetUserAsync((ulong)reader.GetInt64(0));
+            var antragsnummer = reader.GetString(1);
+            bool unbanned = reader.GetBoolean(2);
+            var grund = reader.GetString(3);
+            var mod = await ctx.Client.GetUserAsync((ulong)reader.GetInt64(4));
+            var timestamp = reader.GetInt64(5);
+            
+            if (unbanned)
+            {
+                pos++;
+            }
+            else
+            {
+                neg++;
+            }
+            
+            eb.AddField(new DiscordEmbedField($"Antragsnummer: {antragsnummer}", 
+                $"> User: {user.Mention} ({user.Id})\n" +
+                $"> Entbannung: {Helperfunctions.BoolToEmoji(unbanned)}\n" +
+                $"> Grund: ``{grund}``\n" +
+                $"> Bearbeitet von: {mod.Mention} ({mod.Id})\n" +
+                $"> Zeitpunkt: <t:{timestamp}:f> (<t:{timestamp}:R>)"));
+            i++;
+            await Task.Delay(100);
+        }
+        eb.WithTitle($"Letzte {i} Anträge");
+        eb.WithFooter($"Entbannt: {pos} | Nicht: {neg}");
+
+        await ctx.EditResponseAsync(
+            new DiscordWebhookBuilder().AddEmbed(eb));
+    }
 
     private static bool isUnbanned(string value)
     {
