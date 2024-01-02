@@ -180,6 +180,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     return;
                 }
 
+                await Helperfunctions.RegelPhase1(e.User);
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
@@ -208,7 +209,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
-                    new DiscordInteractionResponseBuilder().WithContent("Hinweise wurden Akzeptiert. Fahre fort..."));
+                    new DiscordInteractionResponseBuilder().WithContent("Hinweise wurden akzeptiert. Fahre fort..."));
                 await Task.Delay(2000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
@@ -227,6 +228,24 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
+                
+                bool readyToCreateTicket = await Helperfunctions.RegelPhase2(e.Interaction);
+                
+                if (!readyToCreateTicket)
+                {
+                    await e.Interaction.EditOriginalResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Du bist zu schnell!!"));
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Hey! Nicht so schnell!");
+                    embed.WithDescription(
+                        "Bitte lies dir die Antragshinweise __aufmerksam__ durch und warte 3 Minuten bis du auf den Bestätigungbutton klickst. Das nichtlesen der Antragshinweise kann zu einer Antragsablehnung führen. Durch diesen Cooldown wollen wir sicherstellen, dass du die Antragshinweise liest.");
+                    embed.WithColor(DiscordColor.Red);
+                    // create new response
+                    await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().AddEmbed(embed).AsEphemeral());
+                    return;
+                }
+                
+                await Helperfunctions.RegelPhase3(e.User);
 
                 await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(

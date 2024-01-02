@@ -95,6 +95,77 @@ public static class Helperfunctions
         return data;
     }
 
+    public static async Task RegelPhase1(DiscordUser user)
+    {
+        var unixTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
+        var constring = DbString();
+        await using var con = new NpgsqlConnection(constring);
+        await con.OpenAsync();
+        // look in table if user is already in there
+        
+        // schema user_id bigint, time bigint
+        await using var cmd = new NpgsqlCommand("SELECT * FROM requirementconfirmation WHERE user_id = @userid", con);
+        cmd.Parameters.AddWithValue("userid", (long)user.Id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        // if user is in there, update, else insert
+        
+        
+        if (reader.HasRows)
+        {
+            await reader.ReadAsync();
+            await reader.CloseAsync();
+            await using var cmd2 = new NpgsqlCommand("UPDATE requirementconfirmation SET time = @time WHERE user_id = @userid", con);
+            cmd2.Parameters.AddWithValue("userid", (long)user.Id);
+            cmd2.Parameters.AddWithValue("time", unixTimestamp);
+            await cmd2.ExecuteNonQueryAsync();
+        }
+        else
+        {
+            await reader.CloseAsync();
+            await using var cmd2 = new NpgsqlCommand("INSERT INTO requirementconfirmation (user_id, time) VALUES (@userid, @time)", con);
+            cmd2.Parameters.AddWithValue("userid", (long)user.Id);
+            cmd2.Parameters.AddWithValue("time", unixTimestamp);
+            await cmd2.ExecuteNonQueryAsync();
+        }
+    }
+
+    public static async Task<bool> RegelPhase2(DiscordInteraction interaction)
+    {
+        var user_id = interaction.User.Id;
+        var constring = DbString();
+        await using var con = new NpgsqlConnection(constring);
+        await con.OpenAsync();
+        bool ready = false;
+        // look for timestamp and if 5 minutes have passed
+        await using var cmd = new NpgsqlCommand("SELECT * FROM requirementconfirmation WHERE user_id = @userid", con);
+        cmd.Parameters.AddWithValue("userid", (long)user_id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            await reader.ReadAsync();
+            var timestamp = reader.GetInt64(1);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            if (now - timestamp >= 180)
+            {
+                ready = true;
+            }
+
+            return ready;
+        }
+
+        return true;
+    }
+
+    public static async Task RegelPhase3(DiscordUser user)
+    {
+        ulong user_id = user.Id;
+        var constring = DbString();
+        await using var con = new NpgsqlConnection(constring);
+        await con.OpenAsync();
+        await using var cmd = new NpgsqlCommand("DELETE FROM requirementconfirmation WHERE user_id = @userid", con);
+        cmd.Parameters.AddWithValue("userid", (long)user_id);
+        await cmd.ExecuteNonQueryAsync();
+    }
 
     public static string BoolToEmoji(bool value)
     {
