@@ -13,6 +13,7 @@ public static class MessageGenerator
         var color = new DiscordColor("2f3136");
         var embeds = new List<DiscordEmbed>();
         var embed1 = new DiscordEmbedBuilder();
+        embed1.WithAuthor(name:"Aufmerksam lesen!");
         embed1.WithTitle("Warum wurde ich gebannt?");
         embed1.WithDescription("Du wurdest gebannt, weil du auf AGC gegen die Regeln verstoßen hast. \n" +
                                "Sofern du nicht weißt, wieso du gebannt wurdest, erfrage bitte dies gleich zum Anfang deines Entbannungsantrags. Wir geben dir dann Auskunft darüber, wieso du gebannt wurdest. \n\n" +
@@ -28,6 +29,7 @@ public static class MessageGenerator
             "- Was hast du daraus gelernt? \n" +
             "- Was wirst du anders machen, um so eine Situation in Zukunft zu vermeiden? \n" +
             "- Wie können wir sicher sein, dass du dich in Zukunft an unsere Regeln hältst? \n");
+        embed2.WithFooter("Das herrunterrattern als Stichpunkte führt möglicherweise zu einer Ablehnung! Antworte so ausführlich wie möglich und in einem Fließtext!");
         embed2.WithColor(color);
         embeds.Add(embed2.Build());
         var embed3 = new DiscordEmbedBuilder();
@@ -37,9 +39,10 @@ public static class MessageGenerator
             "Verzichte bitte auf mögliche Lückenfüller, indem du auf unnötige Rechtfertigungen verzichtest, wie z.B. warum du entbannt werden möchtest. \n\n" +
             "> Solltest du Schwierigkeiten mit der Rechtschreibung haben, durch z.b eine Lese- und Rechtschreibschwäche, so kannst du dies gerne in deinem Antrag erwähnen. \n\n" +
             "Nimm dir außerdem Zeit. Wir möchten sehen, dass dir etwas an der Entbannung liegt. Schau also dass du alle Kriterien erfüllst. \n\n" +
-            "⚠️ Wenn der Entbannungsantrag nicht ordentlich bearbeitet wird, wird er abgelehnt! \n" +
+            "⚠️ Wenn der Entbannungsantrag nicht ordentlich bearbeitet wird, wird er abgelehnt! \n\n" +
             "⚠️ Das verwenden einer AI/KI kann zu einer direkten Ablehnung führen. \n\n" +
-            "🛑 Sollte dein Antrag abgelehnt werden, wirst du in der Regel für 3 Monate gesperrt. ");
+            "🛑 Sollte dein Antrag abgelehnt werden, wirst du in der Regel für 3 Monate gesperrt. \n\n" +
+            "⌚ Das nichtlesen der Anforderungen kann zu einer direkten Ablehnung führen. Daher bitten wir dich, die Anforderungen sorgfältig zu lesen.");
         embed3.WithColor(color);
         embeds.Add(embed3.Build());
         return embeds;

@@ -179,8 +179,7 @@ public class onComponentInteraction : ApplicationCommandsModule
 
                     return;
                 }
-
-                await Helperfunctions.RegelPhase1(e.User);
+                
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
@@ -229,24 +228,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                     return;
                 }
                 
-                bool readyToCreateTicket = await Helperfunctions.RegelPhase2(e.Interaction);
-                
-                if (!readyToCreateTicket)
-                {
-                    await e.Interaction.EditOriginalResponseAsync(
-                        new DiscordWebhookBuilder().WithContent("Du bist zu schnell!!"));
-                    var embed = new DiscordEmbedBuilder();
-                    embed.WithTitle("Hey! Nicht so schnell!");
-                    embed.WithDescription(
-                        "Bitte lies dir die Antragshinweise __aufmerksam__ durch und warte 3 Minuten bis du auf den Bestätigungbutton klickst. Das nichtlesen der Antragshinweise kann zu einer Antragsablehnung führen. Durch diesen Cooldown wollen wir sicherstellen, dass du die Antragshinweise liest.");
-                    embed.WithColor(DiscordColor.Red);
-                    // create new response
-                    await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().AddEmbed(embed).AsEphemeral());
-                    return;
-                }
-                
-                await Helperfunctions.RegelPhase3(e.User);
-
                 await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Erstelle Ticket..."));
