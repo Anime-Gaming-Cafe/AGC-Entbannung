@@ -19,6 +19,8 @@ namespace AGC_Entbannungssystem.Eventhandler.UnbanGuild;
 [EventHandler]
 public class onComponentInteraction : ApplicationCommandsModule
 {
+    Dictionary<ulong, long> timeMessuarements = new();
+    
     [Event]
     public async Task ComponentInteractionCreated(DiscordClient client, ComponentInteractionCreateEventArgs e)
     {
@@ -180,6 +182,15 @@ public class onComponentInteraction : ApplicationCommandsModule
                     return;
                 }
                 
+                if (timeMessuarements.ContainsKey(e.User.Id))
+                {
+                    timeMessuarements[e.User.Id] = DateTimeOffset.Now.ToUnixTimeSeconds();
+                }
+                else
+                {
+                    timeMessuarements.Add(e.User.Id, DateTimeOffset.Now.ToUnixTimeSeconds());
+                }
+                
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
@@ -203,10 +214,35 @@ public class onComponentInteraction : ApplicationCommandsModule
             }
             else if (cid == "open_appealticket_confirm")
             {
+                string tookseconds = "";
+                if (timeMessuarements.ContainsKey(e.User.Id))
+                {
+                    long start = timeMessuarements[e.User.Id];
+                    long end = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    long diff = end - start;
+                    tookseconds = $"{diff}";
+                    
+                    if (diff < 10)
+                    {
+                        tookseconds = "⚠️ " + tookseconds  + " Sekunden";
+                    }
+                    else
+                    {
+                        tookseconds = tookseconds + " Sekunden";
+                    
+                    }
+                }
+                else
+                {
+                    tookseconds = "N/A";
+                }
+                
+                
+                
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
                 await logChannel.SendMessageAsync(
-                    $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                    $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
                     new DiscordInteractionResponseBuilder().WithContent("Hinweise wurden akzeptiert. Fahre fort..."));
                 await Task.Delay(2000);
