@@ -41,8 +41,9 @@ public static class MessageGenerator
             "Nimm dir außerdem Zeit. Wir möchten sehen, dass dir etwas an der Entbannung liegt. Schau also dass du alle Kriterien erfüllst. \n\n" +
             "⚠️ Wenn der Entbannungsantrag nicht ordentlich bearbeitet wird, wird er abgelehnt! \n\n" +
             "⚠️ Das verwenden einer AI/KI kann zu einer direkten Ablehnung führen. \n\n" +
-            "🛑 Sollte dein Antrag abgelehnt werden, wirst du in der Regel für 3 Monate gesperrt. \n\n" +
-            "⌚ Das nichtlesen der Anforderungen kann zu einer direkten Ablehnung führen. Daher bitten wir dich, die Anforderungen sorgfältig zu lesen.");
+            "🛑 Sollte dein Antrag abgelehnt werden, wirst du für 3 Monate gesperrt. \n\n" +
+            "🕰️ Du hast für den Entbannungsantrag 24 Stunden Zeit. Sollte in dieser Zeit kein Antrag gestellt werden, wirst du ebenfalls abgelehnt und für 3 Monate gesperrt.\n\n" +
+            "⌚ **Das nichtlesen der Anforderungen kann zu einer __direkten Ablehnung__ führen. Daher bitten wir dich __in jedem fall__, die Anforderungen sorgfältig zu lesen.**");
         embed3.WithColor(color);
         embeds.Add(embed3.Build());
         return embeds;
