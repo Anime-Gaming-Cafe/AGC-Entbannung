@@ -99,7 +99,7 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
         var ch = await ctx.Client.GetChannelAsync(chid);
         await ch.SendMessageAsync(eb);
     }
-    
+
     [SlashCommand("recent", "Zeigt die letzten 5 Anträge an.")]
     public static async Task RecentAnträge(InteractionContext ctx)
     {
@@ -127,7 +127,7 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             var grund = reader.GetString(3);
             var mod = await ctx.Client.GetUserAsync((ulong)reader.GetInt64(4));
             var timestamp = reader.GetInt64(5);
-            
+
             if (unbanned)
             {
                 pos++;
@@ -136,8 +136,8 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             {
                 neg++;
             }
-            
-            eb.AddField(new DiscordEmbedField($"Antragsnummer: {antragsnummer}", 
+
+            eb.AddField(new DiscordEmbedField($"Antragsnummer: {antragsnummer}",
                 $"> User: {user.Mention} ({user.Id})\n" +
                 $"> Entbannung: {Helperfunctions.BoolToEmoji(unbanned)}\n" +
                 $"> Grund: ``{grund}``\n" +
@@ -146,6 +146,7 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             i++;
             await Task.Delay(100);
         }
+
         eb.WithTitle($"Letzte {i} Anträge");
         eb.WithFooter($"Entbannt: {pos} | Nicht Entbannt: {neg}");
 

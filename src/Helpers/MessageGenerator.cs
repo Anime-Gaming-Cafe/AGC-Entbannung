@@ -13,7 +13,7 @@ public static class MessageGenerator
         var color = new DiscordColor("2f3136");
         var embeds = new List<DiscordEmbed>();
         var embed1 = new DiscordEmbedBuilder();
-        embed1.WithAuthor(name:"Aufmerksam lesen!");
+        embed1.WithAuthor("Aufmerksam lesen!");
         embed1.WithTitle("Warum wurde ich gebannt?");
         embed1.WithDescription("Du wurdest gebannt, weil du auf AGC gegen die Regeln verstoßen hast. \n" +
                                "Sofern du nicht weißt, wieso du gebannt wurdest, erfrage bitte dies gleich zum Anfang deines Entbannungsantrags. Wir geben dir dann Auskunft darüber, wieso du gebannt wurdest. \n\n" +
@@ -29,7 +29,8 @@ public static class MessageGenerator
             "- Was hast du daraus gelernt? \n" +
             "- Was wirst du anders machen, um so eine Situation in Zukunft zu vermeiden? \n" +
             "- Wie können wir sicher sein, dass du dich in Zukunft an unsere Regeln hältst? \n");
-        embed2.WithFooter("Das herrunterrattern als Stichpunkte führt möglicherweise zu einer Ablehnung! Antworte so ausführlich wie möglich und in einem Fließtext!");
+        embed2.WithFooter(
+            "Das herrunterrattern als Stichpunkte führt möglicherweise zu einer Ablehnung! Antworte so ausführlich wie möglich und in einem Fließtext!");
         embed2.WithColor(color);
         embeds.Add(embed2.Build());
         var embed3 = new DiscordEmbedBuilder();

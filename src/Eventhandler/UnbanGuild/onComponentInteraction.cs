@@ -19,8 +19,8 @@ namespace AGC_Entbannungssystem.Eventhandler.UnbanGuild;
 [EventHandler]
 public class onComponentInteraction : ApplicationCommandsModule
 {
-    Dictionary<ulong, long> timeMessuarements = new();
-    
+    private readonly Dictionary<ulong, long> timeMessuarements = new();
+
     [Event]
     public async Task ComponentInteractionCreated(DiscordClient client, ComponentInteractionCreateEventArgs e)
     {
@@ -181,7 +181,7 @@ public class onComponentInteraction : ApplicationCommandsModule
 
                     return;
                 }
-                
+
                 if (timeMessuarements.ContainsKey(e.User.Id))
                 {
                     timeMessuarements[e.User.Id] = DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -190,7 +190,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 {
                     timeMessuarements.Add(e.User.Id, DateTimeOffset.Now.ToUnixTimeSeconds());
                 }
-                
+
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
@@ -223,29 +223,26 @@ public class onComponentInteraction : ApplicationCommandsModule
                     long diff = end - start;
                     tookseconds = $"{diff}";
                     timediff = diff;
-                    
+
                     if (diff < 15)
                     {
-                        tookseconds = "⚠️ " + tookseconds  + " Sekunden";
+                        tookseconds = "⚠️ " + tookseconds + " Sekunden";
                     }
                     else
                     {
                         tookseconds = tookseconds + " Sekunden";
-                    
                     }
                 }
                 else
                 {
                     tookseconds = "N/A";
                 }
-                
-                
-                
-                
+
+
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
-                
-                
+
+
                 if (timediff < 15)
                 {
                     var embed = new DiscordEmbedBuilder();
@@ -255,16 +252,14 @@ public class onComponentInteraction : ApplicationCommandsModule
                     embed.WithColor(DiscordColor.Red);
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
                         new DiscordInteractionResponseBuilder().AddEmbed(embed));
-                    await logChannel.SendMessageAsync($"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **nicht gelesen** | Automatische ablehnung erfolgt - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
+                    await logChannel.SendMessageAsync(
+                        $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **nicht gelesen** | Automatische ablehnung erfolgt - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
                     await Sperre(e.User, "Hinweise nicht gelesen", e);
                     await AblehnungEintragen(e.User, "Hinweise nicht gelesen", e);
                     return;
                 }
-                
-                
-                
-                
-                
+
+
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
@@ -287,7 +282,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
-                
+
                 await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Erstelle Ticket..."));
@@ -343,8 +338,8 @@ public class onComponentInteraction : ApplicationCommandsModule
             await Task.CompletedTask;
         });
     }
-    
-    
+
+
     private static async Task Sperre(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
     {
         var timestamp = DateTimeOffset.UtcNow.AddMonths(3).ToUnixTimeSeconds();
@@ -370,10 +365,13 @@ public class onComponentInteraction : ApplicationCommandsModule
         {
             // ignored
         }
+
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder();
         embed.WithDescription(
             $"{DateTime.UtcNow.Timestamp(TimestampFormat.LongDateTime)} - {user.Mention} ({user.Id}) - Antrag -/- (Autosperre) - ``{reason}`` -> Gesperrt bis: <t:{timestamp}:f> ( <t:{timestamp}:R> )");
-        embed.WithFooter($"Gesperrt durch {CurrentApplicationData.Client.CurrentUser.UsernameWithDiscriminator} ({CurrentApplicationData.Client.CurrentUser.Id})", CurrentApplicationData.Client.CurrentUser.AvatarUrl);
+        embed.WithFooter(
+            $"Gesperrt durch {CurrentApplicationData.Client.CurrentUser.UsernameWithDiscriminator} ({CurrentApplicationData.Client.CurrentUser.Id})",
+            CurrentApplicationData.Client.CurrentUser.AvatarUrl);
         ulong infochannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreInfoChannelId"));
         DiscordChannel ichan = e.Guild.GetChannel(infochannelid);
         await ichan.SendMessageAsync(embed);
@@ -393,7 +391,7 @@ public class onComponentInteraction : ApplicationCommandsModule
         cmd2.Parameters.AddWithValue("isunbanned", false);
         cmd2.Parameters.AddWithValue("grund", reason);
         await cmd2.ExecuteNonQueryAsync();
-        
+
         var eb = new DiscordEmbedBuilder();
         eb.WithTitle("Antrag wurde abgelehnt!");
         eb.WithColor(DiscordColor.Red);

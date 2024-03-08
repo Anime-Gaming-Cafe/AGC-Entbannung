@@ -14,7 +14,7 @@
     "AbstimmungsChannelId": "ChannelID",
     "VoteCategoryChannelId": "ChannelID",
     "SperreRoleId": "RoleID",
-    "SperreInfoChannelId":  "ChannelID",
+    "SperreInfoChannelId": "ChannelID",
     "BearbeitetCategoryId": "CategoryID",
     "BackupTranscriptPath": "Drive Path",
     "BackupTranscriptUrl": "Drive URL"

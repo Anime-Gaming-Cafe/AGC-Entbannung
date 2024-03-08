@@ -102,19 +102,20 @@ public static class Helperfunctions
         await using var con = new NpgsqlConnection(constring);
         await con.OpenAsync();
         // look in table if user is already in there
-        
+
         // schema user_id bigint, time bigint
         await using var cmd = new NpgsqlCommand("SELECT * FROM requirementconfirmation WHERE user_id = @userid", con);
         cmd.Parameters.AddWithValue("userid", (long)user.Id);
         await using var reader = await cmd.ExecuteReaderAsync();
         // if user is in there, update, else insert
-        
-        
+
+
         if (reader.HasRows)
         {
             await reader.ReadAsync();
             await reader.CloseAsync();
-            await using var cmd2 = new NpgsqlCommand("UPDATE requirementconfirmation SET time = @time WHERE user_id = @userid", con);
+            await using var cmd2 =
+                new NpgsqlCommand("UPDATE requirementconfirmation SET time = @time WHERE user_id = @userid", con);
             cmd2.Parameters.AddWithValue("userid", (long)user.Id);
             cmd2.Parameters.AddWithValue("time", unixTimestamp);
             await cmd2.ExecuteNonQueryAsync();
@@ -122,7 +123,8 @@ public static class Helperfunctions
         else
         {
             await reader.CloseAsync();
-            await using var cmd2 = new NpgsqlCommand("INSERT INTO requirementconfirmation (user_id, time) VALUES (@userid, @time)", con);
+            await using var cmd2 =
+                new NpgsqlCommand("INSERT INTO requirementconfirmation (user_id, time) VALUES (@userid, @time)", con);
             cmd2.Parameters.AddWithValue("userid", (long)user.Id);
             cmd2.Parameters.AddWithValue("time", unixTimestamp);
             await cmd2.ExecuteNonQueryAsync();
