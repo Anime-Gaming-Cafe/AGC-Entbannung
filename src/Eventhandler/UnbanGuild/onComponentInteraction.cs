@@ -215,14 +215,16 @@ public class onComponentInteraction : ApplicationCommandsModule
             else if (cid == "open_appealticket_confirm")
             {
                 string tookseconds = "";
+                long timediff = 0;
                 if (timeMessuarements.ContainsKey(e.User.Id))
                 {
                     long start = timeMessuarements[e.User.Id];
                     long end = DateTimeOffset.Now.ToUnixTimeSeconds();
                     long diff = end - start;
                     tookseconds = $"{diff}";
+                    timediff = diff;
                     
-                    if (diff < 10)
+                    if (diff < 15)
                     {
                         tookseconds = "⚠️ " + tookseconds  + " Sekunden";
                     }
@@ -239,8 +241,30 @@ public class onComponentInteraction : ApplicationCommandsModule
                 
                 
                 
+                
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
+                
+                
+                if (timediff < 15)
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Antrag abgelehnt!");
+                    embed.WithDescription(
+                        "Da du die Antragshinweise nicht gelesen hast und einfach nur auf den Button geklickt hast, wurde dein Antrag automatisch abgelehnt. Du kannst es in 3 Monaten erneut versuchen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                        new DiscordInteractionResponseBuilder().AddEmbed(embed));
+                    await logChannel.SendMessageAsync($"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **nicht gelesen** | Automatische ablehnung erfolgt - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
+                    await Sperre(e.User, "Hinweise nicht gelesen", e);
+                    await AblehnungEintragen(e.User, "Hinweise nicht gelesen", e);
+                    return;
+                }
+                
+                
+                
+                
+                
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
@@ -318,5 +342,67 @@ public class onComponentInteraction : ApplicationCommandsModule
 
             await Task.CompletedTask;
         });
+    }
+    
+    
+    private static async Task Sperre(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
+    {
+        var timestamp = DateTimeOffset.UtcNow.AddMonths(3).ToUnixTimeSeconds();
+        await using var con2 = new NpgsqlConnection(Helperfunctions.DbString());
+        await con2.OpenAsync();
+        await using var cmd2 =
+            new NpgsqlCommand(
+                "INSERT INTO antragssperre (user_id, reason, expires_at) VALUES (@userid, @reason, @timestamp)", con2);
+        cmd2.Parameters.AddWithValue("userid", (long)user.Id);
+        cmd2.Parameters.AddWithValue("reason", reason);
+        cmd2.Parameters.AddWithValue("timestamp", timestamp);
+        await cmd2.ExecuteNonQueryAsync();
+        await con2.CloseAsync();
+        try
+        {
+            // try to give role
+            ulong roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreRoleId"));
+            DiscordRole role = e.Guild.GetRole(roleid);
+            DiscordMember member = await e.Guild.GetMemberAsync(user.Id);
+            await member.GrantRoleAsync(role, "Antragssperre");
+        }
+        catch (Exception exception)
+        {
+            // ignored
+        }
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder();
+        embed.WithDescription(
+            $"{DateTime.UtcNow.Timestamp(TimestampFormat.LongDateTime)} - {user.Mention} ({user.Id}) - Antrag -/- (Autosperre) - ``{reason}`` -> Gesperrt bis: <t:{timestamp}:f> ( <t:{timestamp}:R> )");
+        embed.WithFooter($"Gesperrt durch {CurrentApplicationData.Client.CurrentUser.UsernameWithDiscriminator} ({CurrentApplicationData.Client.CurrentUser.Id})", CurrentApplicationData.Client.CurrentUser.AvatarUrl);
+        ulong infochannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreInfoChannelId"));
+        DiscordChannel ichan = e.Guild.GetChannel(infochannelid);
+        await ichan.SendMessageAsync(embed);
+    }
+
+    private static async Task AblehnungEintragen(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
+    {
+        await using var con2 = new NpgsqlConnection(Helperfunctions.DbString());
+        await con2.OpenAsync();
+        await using var cmd2 = new NpgsqlCommand(
+            "INSERT INTO antragsverlauf (antrags_id, user_id, mod_id, timestamp, entbannt, reason) VALUES (@antragsnummer, @userid, @modid, @timestamp, @isunbanned, @grund)",
+            con2);
+        cmd2.Parameters.AddWithValue("antragsnummer", "STUB0000");
+        cmd2.Parameters.AddWithValue("userid", (long)user.Id);
+        cmd2.Parameters.AddWithValue("modid", (long)CurrentApplicationData.Client.CurrentUser.Id);
+        cmd2.Parameters.AddWithValue("timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        cmd2.Parameters.AddWithValue("isunbanned", false);
+        cmd2.Parameters.AddWithValue("grund", reason);
+        await cmd2.ExecuteNonQueryAsync();
+        
+        var eb = new DiscordEmbedBuilder();
+        eb.WithTitle("Antrag wurde abgelehnt!");
+        eb.WithColor(DiscordColor.Red);
+        eb.WithDescription(
+            $"**Status:** {Helperfunctions.BoolToEmoji(false)}\n**Bearbeitet von:** {CurrentApplicationData.Client.CurrentUser.Mention} ({CurrentApplicationData.Client.CurrentUser.Id}) \n**Antragsnummer:** -/-\n**Betroffener User:** {user.Mention} ({user.Id})\n**Grund:** {reason}");
+        eb.WithFooter("Entbannungssystem", CurrentApplicationData.Client.CurrentUser.AvatarUrl);
+        eb.WithTimestamp(DateTimeOffset.Now);
+        var chid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "HistoryChannelId"));
+        var ch = e.Guild.GetChannel(chid);
+        await ch.SendMessageAsync(eb);
     }
 }
