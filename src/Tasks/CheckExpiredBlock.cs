@@ -34,7 +34,7 @@ public class CheckExpiredBlock
                     var guild = await client.GetGuildAsync(
                         ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId")));
 
-                    var roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "BlockRoleId"));
+                    var roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreRoleId"));
                     try
                     {
                         var member = await guild.GetMemberAsync(userid);
