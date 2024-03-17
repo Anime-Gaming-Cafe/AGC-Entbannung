@@ -242,32 +242,12 @@ public class onComponentInteraction : ApplicationCommandsModule
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
 
-                
-
-
-                await logChannel.SendMessageAsync(
-                    $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
-                    new DiscordInteractionResponseBuilder().WithContent("Hinweise wurden akzeptiert. Fahre fort..."));
-                await Task.Delay(2000);
-                await e.Interaction.EditOriginalResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
-                var appealrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
-                await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Prüfe auf offenes Ticket..."));
                 DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
-                if (member.Roles.Contains(appealrole))
-                {
-                    var embed = new DiscordEmbedBuilder();
-                    embed.WithTitle("Fehler!");
-                    embed.WithDescription(
-                        "Du hast bereits ein offenes Ticket. Bitte nutze dieses, um einen Entbannungsantrag zu stellen.");
-                    embed.WithColor(DiscordColor.Red);
-                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
-                    return;
-                }
-                if (timediff < 15)
+                var appealrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
+                
+                if (timediff < 15 && !member.Roles.Contains(appealrole))
                 {
                     var embed = new DiscordEmbedBuilder();
                     embed.WithTitle("Antrag abgelehnt!");
@@ -282,6 +262,29 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await AblehnungEintragen(e.User, "Hinweise nicht gelesen", e);
                     return;
                 }
+
+
+                await logChannel.SendMessageAsync(
+                    $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **akzeptiert** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                    new DiscordInteractionResponseBuilder().WithContent("Hinweise wurden akzeptiert. Fahre fort..."));
+                await Task.Delay(2000);
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
+                await Task.Delay(1000);
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent("Prüfe auf offenes Ticket..."));
+                if (member.Roles.Contains(appealrole))
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Fehler!");
+                    embed.WithDescription(
+                        "Du hast bereits ein offenes Ticket. Bitte nutze dieses, um einen Entbannungsantrag zu stellen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    return;
+                }
+
 
                 await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(
