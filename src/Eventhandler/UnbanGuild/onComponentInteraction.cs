@@ -214,7 +214,7 @@ public class onComponentInteraction : ApplicationCommandsModule
             }
             else if (cid == "open_appealticket_confirm")
             {
-                string tookseconds = "";
+                string tookseconds;
                 long timediff = 0;
                 if (timeMessuarements.ContainsKey(e.User.Id))
                 {
@@ -242,22 +242,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
 
-
-                if (timediff < 15)
-                {
-                    var embed = new DiscordEmbedBuilder();
-                    embed.WithTitle("Antrag abgelehnt!");
-                    embed.WithDescription(
-                        "Da du die Antragshinweise nicht gelesen hast und einfach nur auf den Button geklickt hast, wurde dein Antrag automatisch abgelehnt. Du kannst es in 3 Monaten erneut versuchen.");
-                    embed.WithColor(DiscordColor.Red);
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
-                        new DiscordInteractionResponseBuilder().AddEmbed(embed));
-                    await logChannel.SendMessageAsync(
-                        $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **nicht gelesen** | Automatische ablehnung erfolgt - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
-                    await Sperre(e.User, "Hinweise nicht gelesen", e);
-                    await AblehnungEintragen(e.User, "Hinweise nicht gelesen", e);
-                    return;
-                }
+                
 
 
                 await logChannel.SendMessageAsync(
@@ -280,6 +265,21 @@ public class onComponentInteraction : ApplicationCommandsModule
                         "Du hast bereits ein offenes Ticket. Bitte nutze dieses, um einen Entbannungsantrag zu stellen.");
                     embed.WithColor(DiscordColor.Red);
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    return;
+                }
+                if (timediff < 15)
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Antrag abgelehnt!");
+                    embed.WithDescription(
+                        "Da du die Antragshinweise nicht gelesen hast und einfach nur auf den Button geklickt hast, wurde dein Antrag automatisch abgelehnt. Du kannst es in 3 Monaten erneut versuchen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                        new DiscordInteractionResponseBuilder().AddEmbed(embed));
+                    await logChannel.SendMessageAsync(
+                        $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **nicht gelesen** | Automatische ablehnung erfolgt - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)} | Zeit benötigt: {tookseconds}");
+                    await Sperre(e.User, "Hinweise nicht gelesen", e);
+                    await AblehnungEintragen(e.User, "Hinweise nicht gelesen", e);
                     return;
                 }
 
