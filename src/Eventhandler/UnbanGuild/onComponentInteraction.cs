@@ -214,7 +214,7 @@ public class onComponentInteraction : ApplicationCommandsModule
             }
             else if (cid == "open_appealticket_confirm")
             {
-                string tookseconds;
+                string tookseconds = "";
                 long timediff = 0;
                 if (timeMessuarements.ContainsKey(e.User.Id))
                 {
@@ -241,13 +241,13 @@ public class onComponentInteraction : ApplicationCommandsModule
 
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
-
-                await e.Interaction.EditOriginalResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Prüfe auf offenes Ticket..."));
-                DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
-                var appealrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
                 
-                if (timediff < 15 && !member.Roles.Contains(appealrole))
+                
+                var member_ = await e.Guild.GetMemberAsync(e.User.Id);
+                var appealrole_ = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
+
+
+                if (timediff < 15 && !member_.Roles.Contains(appealrole_))
                 {
                     var embed = new DiscordEmbedBuilder();
                     embed.WithTitle("Antrag abgelehnt!");
@@ -271,9 +271,11 @@ public class onComponentInteraction : ApplicationCommandsModule
                 await Task.Delay(2000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Ticket wird erstellt..."));
+                var appealrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
                 await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Prüfe auf offenes Ticket..."));
+                DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
                 if (member.Roles.Contains(appealrole))
                 {
                     var embed = new DiscordEmbedBuilder();
@@ -284,7 +286,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
                     return;
                 }
-
 
                 await Task.Delay(1000);
                 await e.Interaction.EditOriginalResponseAsync(
