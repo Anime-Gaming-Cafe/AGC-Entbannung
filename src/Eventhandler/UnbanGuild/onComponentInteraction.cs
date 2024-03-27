@@ -190,13 +190,18 @@ public class onComponentInteraction : ApplicationCommandsModule
                 {
                     timeMessuarements.Add(e.User.Id, DateTimeOffset.Now.ToUnixTimeSeconds());
                 }
-
+                
+                var openticketrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
+                var member = await e.Guild.GetMemberAsync(e.User.Id);
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
                     "Ich habe alles gelesen und verstanden!",
                     emoji: new DiscordComponentEmoji("✅"));
-                rb.AddComponents(button);
+                if (!member.Roles.Contains(openticketrole))
+                {
+                    rb.AddComponents(button);
+                }
                 rb.AddEmbeds(MessageGenerator.UnbanNoteGenerate());
                 await e.Interaction.EditOriginalResponseAsync(rb);
                 try
