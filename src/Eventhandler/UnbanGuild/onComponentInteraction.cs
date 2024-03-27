@@ -192,7 +192,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 }
                 
                 var openticketrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
-                var member = await e.Guild.GetMemberAsync(e.User.Id);
+                var member = await e.Guild.GetMemberAsync(e.User.Id, true);
 
                 var rb = new DiscordWebhookBuilder();
                 var button = new DiscordButtonComponent(ButtonStyle.Success, "open_appealticket_confirm",
