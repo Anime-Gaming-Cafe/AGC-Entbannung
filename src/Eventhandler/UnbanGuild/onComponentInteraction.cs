@@ -86,6 +86,29 @@ public class onComponentInteraction : ApplicationCommandsModule
                     }
                 }
 
+                if (await GetPermaBlock(e.User.Id))
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Permanent ausgeschlossen");
+                    embed.WithDescription(
+                        "Du wurdest vom Entbannungssystem permanent ausgeschlossen. Du kannst keinen Entbannungsantrag stellen. Das heißt du bist für immer von der Entbannung ausgeschlossen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    try
+                    {
+                        ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
+                        var logChannel = await client.GetChannelAsync(logChannelId);
+                        await logChannel.SendMessageAsync(
+                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (PERMANENT AUSGESCHLOSSEN) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                    }
+                    catch (Exception exception)
+                    {
+                        await ErrorReporting.SendErrorToDev(client, e.User, exception);
+                        client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
+                    }
+                    return;
+                }
+
                 // bs check end
                 if (bs_status)
                 {
@@ -347,6 +370,17 @@ public class onComponentInteraction : ApplicationCommandsModule
             await Task.CompletedTask;
         });
     }
+
+    private static async Task<Boolean> GetPermaBlock(ulong userid)
+    {
+        await using var con = new NpgsqlConnection(Helperfunctions.DbString());
+        await con.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT * FROM permas WHERE userid = @userid", con);
+        cmd.Parameters.AddWithValue("userid", (long)userid);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        return reader.HasRows;
+    }
+    
 
 
     private static async Task Sperre(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
