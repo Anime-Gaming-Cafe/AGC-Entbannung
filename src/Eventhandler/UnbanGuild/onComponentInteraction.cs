@@ -86,28 +86,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                     }
                 }
 
-                if (await GetPermaBlock(e.User.Id))
-                {
-                    var embed = new DiscordEmbedBuilder();
-                    embed.WithTitle("Permanent ausgeschlossen");
-                    embed.WithDescription(
-                        "Du wurdest vom Entbannungssystem permanent ausgeschlossen. Du kannst keinen Entbannungsantrag stellen. Das heißt du bist für immer von der Entbannung ausgeschlossen.");
-                    embed.WithColor(DiscordColor.Red);
-                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
-                    try
-                    {
-                        ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
-                        var logChannel = await client.GetChannelAsync(logChannelId);
-                        await logChannel.SendMessageAsync(
-                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (PERMANENT AUSGESCHLOSSEN) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
-                    }
-                    catch (Exception exception)
-                    {
-                        await ErrorReporting.SendErrorToDev(client, e.User, exception);
-                        client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
-                    }
-                    return;
-                }
 
                 // bs check end
                 if (bs_status)
@@ -132,6 +110,29 @@ public class onComponentInteraction : ApplicationCommandsModule
                         client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
                     }
 
+                    return;
+                }
+                
+                if (await GetPermaBlock(e.User.Id))
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Permanent ausgeschlossen");
+                    embed.WithDescription(
+                        "Du wurdest vom Entbannungssystem permanent ausgeschlossen. Du kannst keinen Entbannungsantrag stellen. Das heißt du bist für immer von der Entbannung ausgeschlossen.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    try
+                    {
+                        ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
+                        var logChannel = await client.GetChannelAsync(logChannelId);
+                        await logChannel.SendMessageAsync(
+                            $"{e.User.Mention} ({e.User.Id}) hat die Antragshinweise **geöffnet** (PERMANENT AUSGESCHLOSSEN) - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
+                    }
+                    catch (Exception exception)
+                    {
+                        await ErrorReporting.SendErrorToDev(client, e.User, exception);
+                        client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
+                    }
                     return;
                 }
 
