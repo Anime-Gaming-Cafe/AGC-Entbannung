@@ -84,7 +84,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         await votechannelmessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsdown:"));
         // unix timestamp now in 24h
         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var now12h = now + 57600;
+        var now16h = now + 57600;
         var constring2 = Helperfunctions.DbString();
         await using var con2 = new NpgsqlConnection(constring2);
         await con2.OpenAsync();
@@ -94,7 +94,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
                 con2);
         cmd2.Parameters.AddWithValue("channelid", (long)ctx.Channel.Id);
         cmd2.Parameters.AddWithValue("messageid", (long)votechannelmessage.Id);
-        cmd2.Parameters.AddWithValue("endtime", now12h);
+        cmd2.Parameters.AddWithValue("endtime", now16h);
         await cmd2.ExecuteNonQueryAsync();
         await con2.CloseAsync();
     }
