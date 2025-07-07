@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Helpers;
@@ -347,13 +347,19 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await using var reader = await cmd.ExecuteReaderAsync();
 
                     if (await reader.ReadAsync())
-                    {
-                        var expiresAt = reader.GetInt64(1);
-                        string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" +
-                                             expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
-                        await e.Interaction.EditOriginalResponseAsync(
-                            new DiscordWebhookBuilder().WithContent(sperrstring));
-                    }
+                {  
+                    var expiresAt = reader.GetInt64(1);
+                    var unixNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    var secondsLeft = expiresAt - unixNow;
+                    var humanTime = TimeSpan.FromSeconds(secondsLeft);
+
+                    string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" +
+                             expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
+                await e.Interaction.EditOriginalResponseAsync(
+                    new DiscordWebhookBuilder().WithContent(sperrstring));
+                await logChannel.SendMessageAsync(
+                    $"🕒 **Sperrzeit verbleibend für {e.User.Username} ({e.User.Id})**: {humanTime.Days} Tage, {humanTime.Hours} Stunden, {humanTime.Minutes} Minuten ({secondsLeft} Sekunden)");
+                }
                     else
                     {
                         await e.Interaction.EditOriginalResponseAsync(
