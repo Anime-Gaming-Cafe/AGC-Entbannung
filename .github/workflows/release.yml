@@ -103,3 +103,10 @@ jobs:
           files: |
             AGC_Entbannung_linux_*.zip
             AGC_Entbannung_win_*.zip
+
+      - name: Trigger Deploy Workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: trigger-deploy
+          client-payload: '{"tag": "${{ steps.taggen.outputs.new_tag }}"}'
