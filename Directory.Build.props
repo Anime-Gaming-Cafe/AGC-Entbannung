@@ -6,5 +6,6 @@
     <SerilogVersion>3.1.2-dev-02097</SerilogVersion>
     <SerilogExtensionsLoggingVersion>8.0.1-dev-10370</SerilogExtensionsLoggingVersion>
     <SerilogSinksConsoleVersion>5.0.1</SerilogSinksConsoleVersion>
+    <NoWarn>DCS0102</NoWarn>
   </PropertyGroup>
 </Project>
