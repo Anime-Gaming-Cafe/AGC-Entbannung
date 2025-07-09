@@ -10,7 +10,7 @@
       "customType": "regex",
       "fileMatch": ["^Directory\\.Build\\.props$"],
       "matchStrings": [
-        "<(?<depName>.+?)Version>(?<currentValue>.+?)</(?<depName>.+?)Version>"
+        "<(?<depName>[^>]+)Version>(?<currentValue>[^<]+)</\\k<depName>Version>"
       ],
       "datasourceTemplate": "nuget"
     }

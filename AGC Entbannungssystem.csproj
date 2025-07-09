@@ -6,6 +6,7 @@
         <RootNamespace>AGC_Entbannungssystem</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <NoWarn>DCS0102</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
