@@ -1,0 +1,107 @@
+name: Deploy Tagged Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test-ssh:
+    name: Test SSH Access
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test SSH Login
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.AGC_CI_PROD_KEY }}
+          script: |
+            echo "SSH access verified: $(hostname)"
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: test-ssh
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Set version from tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          CLEAN_TAG=${TAG#v}
+          SHORT_HASH=$(git rev-parse --short HEAD)
+          echo "GIT_TAG_VERSION=$CLEAN_TAG+$SHORT_HASH" >> $GITHUB_ENV
+          echo "Building with version: $CLEAN_TAG+$SHORT_HASH"
+
+
+      - name: Build
+        run: |
+          echo "Building with version: ${{ env.GIT_TAG_VERSION }}"
+          dotnet publish -c Release -o ./publish -p:InformationalVer=${{ env.GIT_TAG_VERSION }}
+        env:
+          GIT_TAG_VERSION: ${{ env.GIT_TAG_VERSION }}
+
+      - name: Create backup
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            BACKUP_DIR="/srv/DiscordBots/Backups/AGCEntbannung-${{ env.GIT_TAG_VERSION }}-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p $BACKUP_DIR
+            # Copy everything except logs and data folders
+            rsync -av --exclude='logs' --exclude='data' /srv/DiscordBots/AGCEntbannung/ $BACKUP_DIR/ || echo "No files to backup or backup failed"
+            ls -dt /srv/DiscordBots/Backups/AGCEntbannung-* | tail -n +11 | xargs -r rm -rf
+          timeout: 60s
+
+      - name: Deploy to server
+        id: deploy
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./publish/*"
+          target: "/srv/DiscordBots/AGC_Entbannung"
+          strip_components: 1
+          timeout: 120s
+
+      - name: Restart service and verify
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo systemctl restart agc-entbannung
+            
+            # Wait for service to start
+            sleep 20
+            
+            if sudo systemctl is-active --quiet agc-entbannung; then
+              echo "Service started successfully"
+              echo "Deployed version: ${{ env.GIT_TAG_VERSION }}"
+            else
+              echo "Service failed to start, rolling back to backup"
+              LATEST_BACKUP=$(ls -dt /srv/DiscordBots/Backups/AGCEntbannung-* | head -n 1)
+              if [ -n "$LATEST_BACKUP" ]; then
+                # Restore everything except logs and data folders
+                rsync -av --exclude='logs' --exclude='data' $LATEST_BACKUP/ /srv/DiscordBots/AGCEntbannung/
+                sudo systemctl restart agc-entbannung
+                echo "Rolled back to $LATEST_BACKUP"
+                exit 1
+              else
+                echo "No backup found, cannot roll back"
+                exit 1
+              fi
+            fi
+          timeout: 300s
