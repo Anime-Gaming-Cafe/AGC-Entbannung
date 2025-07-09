@@ -3,7 +3,7 @@ name: 📦 Auto Patch Release & Build
 on:
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: write
