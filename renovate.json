@@ -11,6 +11,21 @@
       "enabled": true,
       "automerge": true,
       "automergeType": "pr"
+    },
+    {
+      "groupName": "DisCatSharp packages",
+      "matchPackagePatterns": ["^DisCatSharp"],
+      "groupSlug": "discatsharp"
+    },
+    {
+      "groupName": "Npgsql packages",
+      "matchPackagePatterns": ["^Npgsql"],
+      "groupSlug": "npgsql"
+    },
+    {
+      "groupName": "Serilog packages",
+      "matchPackagePatterns": ["^Serilog"],
+      "groupSlug": "serilog"
     }
   ]
 }

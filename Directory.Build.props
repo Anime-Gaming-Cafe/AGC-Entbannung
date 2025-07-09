@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <DisCatSharpVersion>10.6.7</DisCatSharpVersion>
+    <DisCatSharpAnalyzerVersion>1.0.0</DisCatSharpAnalyzerVersion>
+    <NpgsqlVersion>8.0.3</NpgsqlVersion>
+    <SerilogVersion>3.1.2-dev-02097</SerilogVersion>
+    <SerilogExtensionsLoggingVersion>8.0.1-dev-10370</SerilogExtensionsLoggingVersion>
+    <SerilogSinksConsoleVersion>5.0.1</SerilogSinksConsoleVersion>
+  </PropertyGroup>
+</Project>
