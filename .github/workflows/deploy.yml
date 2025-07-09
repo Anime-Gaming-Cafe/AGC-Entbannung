@@ -71,7 +71,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.AGC_CI_PROD_KEY }}
           source: "./publish/*"
-          target: "/srv/DiscordBots/AGC_Entbannung"
+          target: "/srv/DiscordBots/AGCEntbannung"
           strip_components: 1
           timeout: 120s
 
@@ -83,10 +83,10 @@ jobs:
           key: ${{ secrets.AGC_CI_PROD_KEY }}
           script: |
             sudo systemctl restart agc-entbannung
-            
+
             # Wait for service to start
             sleep 20
-            
+
             if sudo systemctl is-active --quiet agc-entbannung; then
               echo "Service started successfully"
               echo "Deployed version: ${{ env.GIT_TAG_VERSION }}"
