@@ -6,6 +6,7 @@
         <RootNamespace>AGC_Entbannungssystem</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <NoWarn>DCS0102</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,6 +14,7 @@
         <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.6.7" />
         <PackageReference Include="DisCatSharp.Common" Version="10.6.7" />
         <PackageReference Include="DisCatSharp.Interactivity" Version="10.6.7" />
+        <PackageReference Include="DisCatSharp.Analyzer" Version="1.0.0" />
         <PackageReference Include="Npgsql" Version="8.0.3" />
         <PackageReference Include="Serilog" Version="3.1.2-dev-02097"/>
         <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10370"/>
