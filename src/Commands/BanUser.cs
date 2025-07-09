@@ -58,7 +58,7 @@ public sealed class BanUserCommand : ApplicationCommandsModule
         if (interaction.TimedOut)
         {
             var embed_ = new DiscordMessageBuilder()
-                .WithEmbed(confirmEmbedBuilder.WithTitle("Ban abgebrochen")
+                .AddEmbed(confirmEmbedBuilder.WithTitle("Ban abgebrochen")
                     .WithFooter(ctx.User.UsernameWithDiscriminator, ctx.User.AvatarUrl)
                     .WithDescription(
                         "Der Ban wurde abgebrochen.\n\nGrund: Zeitüberschreitung. <:counting_warning:962007085426556989>")
@@ -71,7 +71,7 @@ public sealed class BanUserCommand : ApplicationCommandsModule
         {
             await interaction.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
             var embed_ = new DiscordMessageBuilder()
-                .WithEmbed(confirmEmbedBuilder.WithTitle("Ban abgebrochen")
+                .AddEmbed(confirmEmbedBuilder.WithTitle("Ban abgebrochen")
                     .WithFooter(ctx.User.UsernameWithDiscriminator, ctx.User.AvatarUrl)
                     .WithDescription(
                         "Der Ban wurde abgebrochen.\n\nGrund: Abgebrochen. <:counting_warning:962007085426556989>")
@@ -90,7 +90,7 @@ public sealed class BanUserCommand : ApplicationCommandsModule
                 .WithColor(DiscordColor.Yellow);
             var loadingEmbed = loadingEmbedBuilder.Build();
             var loadingMessage = new DiscordMessageBuilder()
-                .WithEmbed(loadingEmbed).AddComponents(buttons);
+                .AddEmbed(loadingEmbed).AddComponents(buttons);
             await message.ModifyAsync(loadingMessage);
 
             var b_users = "";
@@ -152,7 +152,7 @@ public sealed class BanUserCommand : ApplicationCommandsModule
                 .WithFooter(ctx.User.UsernameWithDiscriminator, ctx.User.AvatarUrl)
                 .WithColor(ec);
             var discordEmbed = discordEmbedBuilder.Build();
-            await message.ModifyAsync(new DiscordMessageBuilder().WithEmbed(discordEmbed));
+            await message.ModifyAsync(new DiscordMessageBuilder().AddEmbed(discordEmbed));
         }
     }
 }

@@ -30,7 +30,7 @@ public sealed class SendPanel : ApplicationCommandsModule
             emoji: new DiscordComponentEmoji("📝"));
         var mb = new DiscordMessageBuilder();
         mb.AddComponents(button);
-        mb.WithEmbed(embed1);
+        mb.AddEmbed(embed1);
         await ctx.Channel.SendMessageAsync(mb);
     }
 
@@ -53,7 +53,7 @@ public sealed class SendPanel : ApplicationCommandsModule
             emoji: new DiscordComponentEmoji("📝"));
         var mb = new DiscordMessageBuilder();
         mb.AddComponents(button);
-        mb.WithEmbed(embed1);
+        mb.AddEmbed(embed1);
         await ctx.Channel.SendMessageAsync(mb);
     }
 }
