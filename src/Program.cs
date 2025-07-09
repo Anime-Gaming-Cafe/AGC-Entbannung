@@ -19,6 +19,7 @@ using DisCatSharp.Interactivity.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using ILogger = Serilog.ILogger;
 
 #endregion
 
@@ -26,10 +27,81 @@ namespace AGC_Entbannungssystem;
 
 public sealed class CurrentApplicationData
 {
+    public static ILogger Logger { get; set; }
+    public static string VersionString { get; } = GetVersionString();
     public static DiscordClient? Client { get; set; }
     public static DiscordUser? BotApplication { get; set; }
     public static bool isReady { get; set; }
+    
+    private static string GetVersionString()
+    {
+        try
+        {
+            var version = typeof(Program)
+                .Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+            Console.Out.WriteLineAsync(version);
+            
+            if (!string.IsNullOrEmpty(version))
+            {
+                if (version.StartsWith("v"))
+                {
+                    return version;
+                }
+                try
+                {
+                    if (Logger != null)
+                    {
+                        Logger.Warning($"Version string '{version}' doesn't follow the expected format (should start with 'v')");
+                    }
+                }
+                catch
+                {
+                }
+
+                return version;
+            }
+
+            try
+            {
+                string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                return $"0.0.1-nightly.{timestamp}";
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    if (Logger != null)
+                    {
+                        Logger.Error(ex, "Failed to generate timestamp for version string");
+                    }
+                }
+                catch
+                {
+                }
+
+                return "0.0.1-nightly.unknown";
+            }
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                if (Logger != null)
+                {
+                    Logger.Error(ex, "Failed to determine version string");
+                }
+            }
+            catch
+            {
+            }
+
+            return "0.0.1-unknown";
+        }
+    }
 }
+
 
 internal sealed class Program
 {
