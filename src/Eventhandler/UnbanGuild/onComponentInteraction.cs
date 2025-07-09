@@ -112,7 +112,7 @@ public class onComponentInteraction : ApplicationCommandsModule
 
                     return;
                 }
-                
+
                 if (await GetPermaBlock(e.User.Id))
                 {
                     var embed = new DiscordEmbedBuilder();
@@ -133,6 +133,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                         await ErrorReporting.SendErrorToDev(client, e.User, exception);
                         client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
                     }
+
                     return;
                 }
 
@@ -214,8 +215,9 @@ public class onComponentInteraction : ApplicationCommandsModule
                 {
                     timeMessuarements.Add(e.User.Id, DateTimeOffset.Now.ToUnixTimeSeconds());
                 }
-                
-                var openticketrole = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
+
+                var openticketrole =
+                    e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
                 var member = await e.Guild.GetMemberAsync(e.User.Id, true);
 
                 var rb = new DiscordWebhookBuilder();
@@ -226,6 +228,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                 {
                     rb.AddComponents(button);
                 }
+
                 rb.AddEmbeds(MessageGenerator.UnbanNoteGenerate());
                 await e.Interaction.EditOriginalResponseAsync(rb);
                 try
@@ -270,8 +273,8 @@ public class onComponentInteraction : ApplicationCommandsModule
 
                 ulong logChannelId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "LogChannelId"));
                 var logChannel = await client.GetChannelAsync(logChannelId);
-                
-                
+
+
                 var member_ = await e.Guild.GetMemberAsync(e.User.Id);
                 var appealrole_ = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
 
@@ -347,19 +350,19 @@ public class onComponentInteraction : ApplicationCommandsModule
                     await using var reader = await cmd.ExecuteReaderAsync();
 
                     if (await reader.ReadAsync())
-                {  
-                    var expiresAt = reader.GetInt64(1);
-                    var unixNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    var secondsLeft = expiresAt - unixNow;
-                    var humanTime = TimeSpan.FromSeconds(secondsLeft);
+                    {
+                        var expiresAt = reader.GetInt64(1);
+                        var unixNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                        var secondsLeft = expiresAt - unixNow;
+                        var humanTime = TimeSpan.FromSeconds(secondsLeft);
 
-                    string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" +
-                             expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
-                await e.Interaction.EditOriginalResponseAsync(
-                    new DiscordWebhookBuilder().WithContent(sperrstring));
-                await logChannel.SendMessageAsync(
-                    $"🕒 **Sperrzeit verbleibend für {e.User.Username} ({e.User.Id})**: {humanTime.Days} Tage, {humanTime.Hours} Stunden, {humanTime.Minutes} Minuten ({secondsLeft} Sekunden)");
-                }
+                        string sperrstring = "Du bist für einen Antrag gesperrt. Deine Sperre läuft bis <t:" +
+                                             expiresAt + ":f> - ( <t:" + expiresAt + ":R> )";
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent(sperrstring));
+                        await logChannel.SendMessageAsync(
+                            $"🕒 **Sperrzeit verbleibend für {e.User.Username} ({e.User.Id})**: {humanTime.Days} Tage, {humanTime.Hours} Stunden, {humanTime.Minutes} Minuten ({secondsLeft} Sekunden)");
+                    }
                     else
                     {
                         await e.Interaction.EditOriginalResponseAsync(
@@ -378,7 +381,7 @@ public class onComponentInteraction : ApplicationCommandsModule
         });
     }
 
-    private static async Task<Boolean> GetPermaBlock(ulong userid)
+    private static async Task<bool> GetPermaBlock(ulong userid)
     {
         await using var con = new NpgsqlConnection(Helperfunctions.DbString());
         await con.OpenAsync();
@@ -387,7 +390,6 @@ public class onComponentInteraction : ApplicationCommandsModule
         await using var reader = await cmd.ExecuteReaderAsync();
         return reader.HasRows;
     }
-    
 
 
     private static async Task Sperre(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
