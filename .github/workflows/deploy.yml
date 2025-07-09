@@ -54,7 +54,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.AGC_CI_PROD_KEY }}
           script: |
             BACKUP_DIR="/srv/DiscordBots/Backups/AGCEntbannung-${{ env.GIT_TAG_VERSION }}-$(date +%Y%m%d-%H%M%S)"
             mkdir -p $BACKUP_DIR
@@ -69,7 +69,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.AGC_CI_PROD_KEY }}
           source: "./publish/*"
           target: "/srv/DiscordBots/AGC_Entbannung"
           strip_components: 1
@@ -80,7 +80,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.AGC_CI_PROD_KEY }}
           script: |
             sudo systemctl restart agc-entbannung
             
