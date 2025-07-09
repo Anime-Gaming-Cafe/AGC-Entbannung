@@ -5,6 +5,16 @@
   "automerge": false,
   "labels": ["dependencies"],
   "dependencyDashboard": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Directory\\.Build\\.props$"],
+      "matchStrings": [
+        "<(?<depName>.+?)Version>(?<currentValue>.+?)</(?<depName>.+?)Version>"
+      ],
+      "datasourceTemplate": "nuget"
+    }
+  ],
   "packageRules": [
     {
       "matchManagers": ["nuget"],
