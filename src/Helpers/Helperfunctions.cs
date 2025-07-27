@@ -27,6 +27,11 @@ public static class Helperfunctions
         return $"Host={dbhost};Username={dbuser};Password={dbpassword};Database={databasename}";
     }
 
+    public static string getTeamPing()
+    {
+        return $"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>";
+    }
+
 
     public static async Task<List<BannSystemReport?>?> GetBannsystemReports(DiscordUser user)
     {
