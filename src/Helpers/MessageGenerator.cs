@@ -67,7 +67,7 @@ public static class MessageGenerator
             $"**Positive Stimmen:** {positiveVotes}\n" +
             $"**Negative Stimmen:** {negativeVotes}\n" +
             $"Die Abstimmung läuft bis <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n" +
-            $"-# Die anzahl der stimmen wird alle 5 Minuten aktualisiert.\n");
+            $"-# Die Anzahl der Stimmen wird alle 5 Minuten aktualisiert.\n");
         embed.WithColor(color);
         return embed.Build();
     }
