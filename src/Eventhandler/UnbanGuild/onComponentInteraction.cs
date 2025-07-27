@@ -28,6 +28,7 @@ public class onComponentInteraction : ApplicationCommandsModule
         _ = Task.Run(async () =>
         {
             string cid = e.Interaction.Data.CustomId;
+
             # region votebuttons
 
             if (cid.StartsWith("vote_"))
@@ -55,7 +56,8 @@ public class onComponentInteraction : ApplicationCommandsModule
                             await Helperfunctions.removeVoteFromAntrag(e);
                             await e.Interaction.EditOriginalResponseAsync(
                                 new DiscordWebhookBuilder().WithContent("Dein vorheriger Vote wurde entfernt."));
-                            await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client, e.Message.Id);
+                            await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client,
+                                e.Message.Id);
                             return;
                         }
 
@@ -72,7 +74,8 @@ public class onComponentInteraction : ApplicationCommandsModule
                             await Helperfunctions.removeVoteFromAntrag(e);
                             await e.Interaction.EditOriginalResponseAsync(
                                 new DiscordWebhookBuilder().WithContent("Dein vorheriger Vote wurde entfernt."));
-                            await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client, e.Message.Id);
+                            await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client,
+                                e.Message.Id);
                             return;
                         }
 
@@ -86,7 +89,6 @@ public class onComponentInteraction : ApplicationCommandsModule
                         await e.Interaction.EditOriginalResponseAsync(
                             new DiscordWebhookBuilder().WithContent("Unbekannter Button!"));
                     }
-
                 }
                 catch (Exception exception)
                 {
@@ -108,6 +110,7 @@ public class onComponentInteraction : ApplicationCommandsModule
             }
 
             # endregion
+
             if (cid == "open_appealticketinfo")
             {
                 DiscordGuild mainGuild = await client.GetGuildAsync(GlobalProperties.MainGuildId);

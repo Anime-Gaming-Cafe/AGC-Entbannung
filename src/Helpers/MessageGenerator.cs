@@ -50,7 +50,8 @@ public static class MessageGenerator
         return embeds;
     }
 
-    public static DiscordEmbed getVoteEmbedInRunning(DiscordChannel votechannel, long targetTimestamp, int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
+    public static DiscordEmbed getVoteEmbedInRunning(DiscordChannel votechannel, long targetTimestamp,
+        int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
     {
         var color = resultForColor switch
         {
@@ -71,7 +72,8 @@ public static class MessageGenerator
         return embed.Build();
     }
 
-    public static DiscordEmbed getVoteEmbedFinished(DiscordChannel votechannel, long targetTimestamp, int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
+    public static DiscordEmbed getVoteEmbedFinished(DiscordChannel votechannel, long targetTimestamp,
+        int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
     {
         var color = resultForColor switch
         {

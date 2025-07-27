@@ -8,11 +8,7 @@ using Npgsql;
 
 namespace AGC_Entbannungssystem.Commands;
 
-#region
 
-
-
-#endregion
 
 public sealed class PermaBlockUserCommand : ApplicationCommandsModule
 {

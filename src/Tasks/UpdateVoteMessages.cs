@@ -93,7 +93,8 @@ public static class UpdateVoteMessages
                 int pvotes = reader.GetInt32(4);
                 int nvotes = reader.GetInt32(5);
                 Console.WriteLine($"{antragchannelid}: {messageId}");
-                Console.WriteLine($"Updating vote message {messageId} in channel {antragchannelid} with expires at {expiresAt}, pvotes: {pvotes}, nvotes: {nvotes}");
+                Console.WriteLine(
+                    $"Updating vote message {messageId} in channel {antragchannelid} with expires at {expiresAt}, pvotes: {pvotes}, nvotes: {nvotes}");
                 await UpdateSingleVoteMessage(client, antragchannelid, messageId, expiresAt, pvotes, nvotes);
             }
         }
@@ -101,6 +102,5 @@ public static class UpdateVoteMessages
         {
             //
         }
-
     }
 }

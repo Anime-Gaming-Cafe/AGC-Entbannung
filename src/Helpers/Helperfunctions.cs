@@ -14,6 +14,12 @@ namespace AGC_Entbannungssystem.Helpers;
 
 public static class Helperfunctions
 {
+    public enum VoteType
+    {
+        Positive,
+        Negative
+    }
+
     public static string GenerateCaseId()
     {
         var guid = Guid.NewGuid().ToString("N");
@@ -51,11 +57,15 @@ public static class Helperfunctions
         await conn.OpenAsync();
 
         var column = positiveVote ? "pvotes" : "nvotes";
-        await using var cmd = new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} + 1 WHERE message_id = @messageid", conn);
+        await using var cmd =
+            new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} + 1 WHERE message_id = @messageid", conn);
         cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
         await cmd.ExecuteNonQueryAsync();
 
-        await using var cmd2 = new NpgsqlCommand("INSERT INTO abstimmungen_teamler (vote_id, user_id, votevalue) VALUES (@voteid, @userid, @votevalue)", conn);
+        await using var cmd2 =
+            new NpgsqlCommand(
+                "INSERT INTO abstimmungen_teamler (vote_id, user_id, votevalue) VALUES (@voteid, @userid, @votevalue)",
+                conn);
         cmd2.Parameters.AddWithValue("voteid", (interaction.Channel.Id + interaction.Message.Id).ToString());
         cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
         cmd2.Parameters.AddWithValue("votevalue", positiveVote ? 1 : 0);
@@ -80,11 +90,13 @@ public static class Helperfunctions
         await conn.OpenAsync();
 
         var column = existingVote == VoteType.Positive ? "pvotes" : "nvotes";
-        await using var cmd = new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} - 1 WHERE message_id = @messageid", conn);
+        await using var cmd =
+            new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} - 1 WHERE message_id = @messageid", conn);
         cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
         await cmd.ExecuteNonQueryAsync();
 
-        await using var cmd2 = new NpgsqlCommand("DELETE FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
+        await using var cmd2 =
+            new NpgsqlCommand("DELETE FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
         var voteId = (long)interaction.Channel.Id + (long)interaction.Message.Id;
         cmd2.Parameters.AddWithValue("voteid", voteId.ToString());
         cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
@@ -97,7 +109,9 @@ public static class Helperfunctions
         var dbstring = DbString();
         await using var conn = new NpgsqlConnection(dbstring);
         await conn.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT votevalue FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
+        await using var cmd =
+            new NpgsqlCommand(
+                "SELECT votevalue FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
         var voteId = (long)interaction.Channel.Id + (long)interaction.Message.Id;
         cmd.Parameters.AddWithValue("voteid", voteId.ToString());
         cmd.Parameters.AddWithValue("userid", (long)interaction.User.Id);
@@ -108,17 +122,9 @@ public static class Helperfunctions
             var value = reader.GetInt32(0);
             return value == 1 ? VoteType.Positive : VoteType.Negative;
         }
+
         return null;
     }
-
-
-    public enum VoteType
-    {
-        Positive,
-        Negative
-    }
-
-
 
 
     public static async Task<List<BannSystemReport?>?> GetBannsystemReports(DiscordUser user)

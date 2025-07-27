@@ -57,7 +57,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
         var idOfAntragChannel = ctx.Channel.Id.ToString();
 
-        var votebuttons = new List<DiscordButtonComponent>()
+        var votebuttons = new List<DiscordButtonComponent>
         {
             new(ButtonStyle.Secondary, "vote_yes_" + idOfAntragChannel, "👍 Ja"),
             new(ButtonStyle.Secondary, "vote_no_" + idOfAntragChannel, "👎 Nein")
@@ -66,7 +66,8 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         var now16h = now + 57600;
 
         var voteembed = MessageGenerator.getVoteEmbedInRunning(ctx.Channel, now16h, 0, 0, 3);
-        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed).WithContent(Helperfunctions.getTeamPing());
+        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed)
+            .WithContent(Helperfunctions.getTeamPing());
         var votemessage = await votechannel.SendMessageAsync(votechannelmessage);
 
         //move channel to vote category

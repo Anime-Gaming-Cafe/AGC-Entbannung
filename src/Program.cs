@@ -32,7 +32,7 @@ public sealed class CurrentApplicationData
     public static DiscordClient? Client { get; set; }
     public static DiscordUser? BotApplication { get; set; }
     public static bool isReady { get; set; }
-    
+
     private static string GetVersionString()
     {
         try
@@ -42,18 +42,20 @@ public sealed class CurrentApplicationData
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion;
             Console.Out.WriteLineAsync(version);
-            
+
             if (!string.IsNullOrEmpty(version))
             {
                 if (version.StartsWith("v"))
                 {
                     return version;
                 }
+
                 try
                 {
                     if (Logger != null)
                     {
-                        Logger.Warning($"Version string '{version}' doesn't follow the expected format (should start with 'v')");
+                        Logger.Warning(
+                            $"Version string '{version}' doesn't follow the expected format (should start with 'v')");
                     }
                 }
                 catch
@@ -101,7 +103,6 @@ public sealed class CurrentApplicationData
         }
     }
 }
-
 
 internal sealed class Program
 {
