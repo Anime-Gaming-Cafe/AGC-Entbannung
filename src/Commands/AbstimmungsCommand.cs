@@ -59,9 +59,19 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         embed.WithDescription($"{ctx.Channel.Name} | ({ctx.Channel.Mention}) steht zur Abstimmung bereit.");
         ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
-        var votechannelmessage =
-            await votechannel.SendMessageAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>",
-                embed);
+        var idOfAntragChannel = ctx.Channel.Id.ToString();
+
+        var votebuttons = new List<DiscordButtonComponent>()
+        {
+            new(ButtonStyle.Secondary, "vote_yes_" + idOfAntragChannel, "👍 Ja"),
+            new(ButtonStyle.Secondary, "vote_no_" + idOfAntragChannel, "👎 Nein")
+        };
+
+
+        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons);
+
+        var votemessage = await votechannel.SendMessageAsync(
+            votechannelmessage.AddEmbed(embed));
 
         //move channel to vote category
         await ctx.EditResponseAsync(
@@ -79,10 +89,6 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         notifyembed.WithFooter("AGC Entbannungssystem");
         await ctx.Channel.SendMessageAsync(notifyembed);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Abstimmung erstellt!"));
-        // daumen hoch und runter
-        await votechannelmessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsup:"));
-        await votechannelmessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":thumbsdown:"));
-        // unix timestamp now in 24h
         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         var now16h = now + 57600;
         var constring2 = Helperfunctions.DbString();
@@ -93,7 +99,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
                 "INSERT INTO abstimmungen (channel_id, message_id, expires_at) VALUES (@channelid, @messageid, @endtime)",
                 con2);
         cmd2.Parameters.AddWithValue("channelid", (long)ctx.Channel.Id);
-        cmd2.Parameters.AddWithValue("messageid", (long)votechannelmessage.Id);
+        cmd2.Parameters.AddWithValue("messageid", (long)votemessage.Id);
         cmd2.Parameters.AddWithValue("endtime", now16h);
         await cmd2.ExecuteNonQueryAsync();
         await con2.CloseAsync();
