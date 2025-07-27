@@ -344,6 +344,7 @@ public static class Helperfunctions
             return false;
         }
     }
+
     
     public static async Task<bool> IsVoteOutcomeDecided(DiscordClient client, int pvotes, int nvotes)
     {
@@ -374,6 +375,7 @@ public static class Helperfunctions
         }
     }
 
+
     public static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
     {
         try
@@ -381,13 +383,15 @@ public static class Helperfunctions
             int totalVotes = pvotes + nvotes;
             bool thresholdReached = await CheckVoteThreshold(client, totalVotes);
             bool isTie = pvotes == nvotes;
+
             bool outcomeDecided = await IsVoteOutcomeDecided(client, pvotes, nvotes);
-            
+          
             var dbstring = DbString();
             await using var conn = new NpgsqlConnection(dbstring);
             await conn.OpenAsync();
             
             if ((thresholdReached && !isTie) || outcomeDecided)
+
             {
                 await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = true WHERE message_id = @messageid", conn);
                 cmd.Parameters.AddWithValue("messageid", (long)messageId);
