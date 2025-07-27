@@ -3,6 +3,8 @@
 using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
+using DisCatSharp.EventArgs;
 using Newtonsoft.Json;
 using Npgsql;
 
@@ -31,6 +33,90 @@ public static class Helperfunctions
     {
         return $"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>";
     }
+
+    public static async Task addVoteToAntrag(ComponentInteractionCreateEventArgs interaction, bool positiveVote)
+    {
+        var existingVote = await UserHasVoted(interaction);
+        if (existingVote != null)
+        {
+            await interaction.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Du hast bereits abgestimmt! Entferne zuerst deine aktuelle Stimme.")
+                    .AsEphemeral());
+            return;
+        }
+
+        var dbstring = DbString();
+        await using var conn = new NpgsqlConnection(dbstring);
+        await conn.OpenAsync();
+
+        var column = positiveVote ? "pvotes" : "nvotes";
+        await using var cmd = new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} + 1 WHERE message_id = @messageid", conn);
+        cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
+        await cmd.ExecuteNonQueryAsync();
+
+        await using var cmd2 = new NpgsqlCommand("INSERT INTO abstimmungsvotes (vote_id, user_id, votevalue) VALUES (@voteid, @userid, @votevalue)", conn);
+        cmd2.Parameters.AddWithValue("voteid", interaction.Channel.Id + interaction.Message.Id);
+        cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
+        cmd2.Parameters.AddWithValue("votevalue", positiveVote ? 1 : 0);
+        await cmd2.ExecuteNonQueryAsync();
+    }
+
+
+    public static async Task removeVoteFromAntrag(ComponentInteractionCreateEventArgs interaction)
+    {
+        var existingVote = await UserHasVoted(interaction);
+        if (existingVote == null)
+        {
+            await interaction.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Du hast noch nicht abgestimmt!")
+                    .AsEphemeral());
+            return;
+        }
+
+        var dbstring = DbString();
+        await using var conn = new NpgsqlConnection(dbstring);
+        await conn.OpenAsync();
+
+        var column = existingVote == VoteType.Positive ? "pvotes" : "nvotes";
+        await using var cmd = new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} - 1 WHERE message_id = @messageid", conn);
+        cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
+        await cmd.ExecuteNonQueryAsync();
+
+        await using var cmd2 = new NpgsqlCommand("DELETE FROM abstimmungsvotes WHERE vote_id = @voteid AND user_id = @userid", conn);
+        cmd2.Parameters.AddWithValue("voteid", interaction.Channel.Id + interaction.Message.Id);
+        cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
+        await cmd2.ExecuteNonQueryAsync();
+    }
+
+
+    public static async Task<VoteType?> UserHasVoted(ComponentInteractionCreateEventArgs interaction)
+    {
+        var dbstring = DbString();
+        await using var conn = new NpgsqlConnection(dbstring);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SELECT votevalue FROM abstimmungsvotes WHERE vote_id = @voteid AND user_id = @userid", conn);
+        cmd.Parameters.AddWithValue("voteid", interaction.Channel.Id + interaction.Message.Id);
+        cmd.Parameters.AddWithValue("userid", (long)interaction.User.Id);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            var value = reader.GetInt32(0);
+            return value == 1 ? VoteType.Positive : VoteType.Negative;
+        }
+        return null;
+    }
+
+
+    public enum VoteType
+    {
+        Positive,
+        Negative
+    }
+
+
 
 
     public static async Task<List<BannSystemReport?>?> GetBannsystemReports(DiscordUser user)

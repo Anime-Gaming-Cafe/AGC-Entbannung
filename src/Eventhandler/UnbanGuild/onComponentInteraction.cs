@@ -27,6 +27,78 @@ public class onComponentInteraction : ApplicationCommandsModule
         _ = Task.Run(async () =>
         {
             string cid = e.Interaction.Data.CustomId;
+            # region votebuttons
+
+            if (cid.StartsWith("vote_"))
+            {
+                try
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+                        new DiscordInteractionResponseBuilder().AsEphemeral());
+                    ulong messageid = ulong.Parse(cid.Split("_")[1]);
+                    ulong channelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
+                    DiscordChannel channel = await client.GetChannelAsync(channelid);
+                    DiscordMessage message = await channel.GetMessageAsync(messageid);
+                    if (message == null)
+                    {
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent("Die Nachricht wurde nicht gefunden."));
+                        return;
+                    }
+
+                    var existingVote = await Helperfunctions.UserHasVoted(e); // returns Positive, Negative or null
+
+                    if (cid == "vote_yes_" + channelid)
+                    {
+                        if (existingVote != null)
+                        {
+                            await Helperfunctions.removeVoteFromAntrag(e);
+                            await e.Interaction.EditOriginalResponseAsync(
+                                new DiscordWebhookBuilder().WithContent("Dein vorheriger Vote wurde entfernt."));
+                            return;
+                        }
+
+                        // add vote
+                        await Helperfunctions.addVoteToAntrag(e, true);
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent($"Dein Vote wurde gezählt! Stimme: **Ja**"));
+                    }
+                    else if (cid == "vote_no_" + channelid)
+                    {
+                        if (existingVote != null)
+                        {
+                            await Helperfunctions.removeVoteFromAntrag(e);
+                            await e.Interaction.EditOriginalResponseAsync(
+                                new DiscordWebhookBuilder().WithContent("Dein vorheriger Vote wurde entfernt."));
+                            return;
+                        }
+
+                        await Helperfunctions.addVoteToAntrag(e, false);
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent($"Dein Vote wurde gezählt! Stimme: **Nein**"));
+                    }
+                    else
+                    {
+                        await e.Interaction.EditOriginalResponseAsync(
+                            new DiscordWebhookBuilder().WithContent("Unbekannter Button!"));
+                    }
+
+                }
+                catch (Exception exception)
+                {
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithTitle("Fehler!");
+                    embed.WithDescription(
+                        "Es ist ein Fehler aufgetreten. Bitte versuche es später erneut. Der Fehler wurde automatisch an den Entwickler weitergeleitet.");
+                    embed.WithColor(DiscordColor.Red);
+                    await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    await ErrorReporting.SendErrorToDev(client, e.User, exception);
+                }
+
+                return;
+            }
+
+            # endregion
             if (cid == "open_appealticketinfo")
             {
                 DiscordGuild mainGuild = await client.GetGuildAsync(GlobalProperties.MainGuildId);
