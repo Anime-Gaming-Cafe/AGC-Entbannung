@@ -38,73 +38,13 @@ public class CheckExpiredVotes
                     ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
                     DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
                     DiscordMessage message = await votechannel.GetMessageAsync(messageid);
-                    DiscordEmbedBuilder emb = new DiscordEmbedBuilder();
+                    DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(votechannel, reader.GetInt64(2),
+                        reader.GetInt32(5), reader.GetInt32(4));
 
-                    IReadOnlyList<DiscordReaction> reactions = message.Reactions;
-                    int positiveVotes = 0;
-                    int negativeVotes = 0;
-                    foreach (var reaction in reactions)
-                    {
-                        if (reaction.Emoji.Name == "👍")
-                        {
-                            positiveVotes = reaction.Count - 1;
-                        }
-                        else if (reaction.Emoji.Name == "👎")
-                        {
-                            negativeVotes = reaction.Count - 1;
-                        }
-                    }
-
-                    // get channel from id
-                    DiscordChannel channel = await client.GetChannelAsync(channelid);
-                    DiscordChannel? antragc = null;
-                    try
-                    {
-                        antragc = await client.GetChannelAsync((ulong)dbcid);
-                    }
-                    catch (Exception e)
-                    {
-                        await ErrorReporting.SendErrorToDev(client, client.CurrentUser, e);
-                    }
-
-
-                    // get message from id
-                    DiscordMessage msg = await channel.GetMessageAsync(messageid);
-                    // remove all reactions from message
-                    await msg.DeleteAllReactionsAsync();
-
-
-                    string resultString = $"**Ergebnis der Abstimmung für {antragc?.Name} ({antragc?.Mention}):**\n" +
-                                          $"**{positiveVotes}** Stimmen für **Ja**\n" +
-                                          $"**{negativeVotes}** Stimmen für **Nein**\n" +
-                                          $"**{positiveVotes + negativeVotes}** Stimmen insgesamt\n\n";
-
-
-                    DiscordColor embedColor;
-
-                    string antragStatus;
-                    if (positiveVotes > negativeVotes)
-                    {
-                        antragStatus = "Abstimmung ist positiv";
-                        embedColor = DiscordColor.Green;
-                    }
-                    else if (positiveVotes < negativeVotes)
-                    {
-                        antragStatus = "Abstimmung ist negativ";
-                        embedColor = DiscordColor.Red;
-                    }
-                    else
-                    {
-                        antragStatus = "Abstimmung ist unentschieden";
-                        embedColor = DiscordColor.Yellow;
-                    }
-
-                    emb.WithTitle("Abstimmung beendet");
-                    emb.WithDescription(resultString + antragStatus);
-                    emb.WithColor(embedColor);
-                    emb.WithTimestamp(DateTimeOffset.UtcNow);
-                    await msg.RespondAsync($"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>",
-                        emb);
+                    DiscordMessageBuilder builder = new DiscordMessageBuilder()
+                        .WithContent(Helperfunctions.getTeamPing())
+                        .AddEmbed(emb);
+                    await message.RespondAsync(builder);
                 }
 
                 await reader.CloseAsync();
@@ -117,6 +57,14 @@ public class CheckExpiredVotes
                 cmd2.CommandText = "DELETE FROM abstimmungen WHERE expires_at < @endtime";
                 cmd2.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                 await cmd2.ExecuteNonQueryAsync();
+                // abstimmungen_teamler delete voteid
+                await using var cmd3 = new NpgsqlCommand();
+                cmd3.Connection = conn2;
+                // voteid is channelid+messageid
+                cmd3.CommandText = "DELETE FROM abstimmungen_teamler WHERE voteid IN " +
+                                   "(SELECT channel_id || '_' || message_id FROM abstimmungen WHERE expires_at < @endtime)";
+                cmd3.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                await cmd3.ExecuteNonQueryAsync();
                 await conn2.CloseAsync();
             }
             catch (Exception err)
