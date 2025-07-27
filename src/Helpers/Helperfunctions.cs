@@ -1,6 +1,7 @@
 ﻿#region
 
 using AGC_Entbannungssystem.Entities;
+using AGC_Entbannungssystem.Enums;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
@@ -15,12 +16,6 @@ namespace AGC_Entbannungssystem.Helpers;
 
 public static class Helperfunctions
 {
-    public enum VoteType
-    {
-        Positive,
-        Negative
-    }
-
     public static string GenerateCaseId()
     {
         var guid = Guid.NewGuid().ToString("N");
@@ -350,6 +345,37 @@ public static class Helperfunctions
         }
     }
 
+    
+    public static async Task<bool> IsVoteOutcomeDecided(DiscordClient client, int pvotes, int nvotes)
+    {
+        try
+        {
+            int teamMemberCount = await GetTeamMemberCount(client);
+            if (teamMemberCount == 0) return false;
+            
+            int remainingVotes = teamMemberCount - (pvotes + nvotes);
+            
+            if (pvotes > teamMemberCount / 2)
+                return true;
+                
+            if (nvotes > teamMemberCount / 2)
+                return true;
+                
+            if (pvotes + remainingVotes < nvotes)
+                return true;
+                
+            if (nvotes + remainingVotes < pvotes)
+                return true;
+                
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+
     public static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
     {
         try
@@ -357,12 +383,15 @@ public static class Helperfunctions
             int totalVotes = pvotes + nvotes;
             bool thresholdReached = await CheckVoteThreshold(client, totalVotes);
             bool isTie = pvotes == nvotes;
-            
+
+            bool outcomeDecided = await IsVoteOutcomeDecided(client, pvotes, nvotes);
+          
             var dbstring = DbString();
             await using var conn = new NpgsqlConnection(dbstring);
             await conn.OpenAsync();
             
-            if (thresholdReached && !isTie)
+            if ((thresholdReached && !isTie) || outcomeDecided)
+
             {
                 await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = true WHERE message_id = @messageid", conn);
                 cmd.Parameters.AddWithValue("messageid", (long)messageId);
