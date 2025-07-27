@@ -3,6 +3,7 @@
 using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
+using AGC_Entbannungssystem.Tasks;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
@@ -54,6 +55,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                             await Helperfunctions.removeVoteFromAntrag(e);
                             await e.Interaction.EditOriginalResponseAsync(
                                 new DiscordWebhookBuilder().WithContent("Dein vorheriger Vote wurde entfernt."));
+                            await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client, e.Message.Id);
                             return;
                         }
 
@@ -61,6 +63,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                         await Helperfunctions.addVoteToAntrag(e, true);
                         await e.Interaction.EditOriginalResponseAsync(
                             new DiscordWebhookBuilder().WithContent($"Dein Vote wurde gezählt! Stimme: **Ja**"));
+                        await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client, e.Message.Id);
                     }
                     else if (cid.StartsWith("vote_no_"))
                     {
@@ -69,12 +72,14 @@ public class onComponentInteraction : ApplicationCommandsModule
                             await Helperfunctions.removeVoteFromAntrag(e);
                             await e.Interaction.EditOriginalResponseAsync(
                                 new DiscordWebhookBuilder().WithContent("Dein vorheriger Vote wurde entfernt."));
+                            await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client, e.Message.Id);
                             return;
                         }
 
                         await Helperfunctions.addVoteToAntrag(e, false);
                         await e.Interaction.EditOriginalResponseAsync(
                             new DiscordWebhookBuilder().WithContent($"Dein Vote wurde gezählt! Stimme: **Nein**"));
+                        await UpdateVoteMessages.UpdateSingleVoteMessage(CurrentApplicationData.Client, e.Message.Id);
                     }
                     else
                     {

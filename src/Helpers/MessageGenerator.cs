@@ -62,7 +62,7 @@ public static class MessageGenerator
         var embed = new DiscordEmbedBuilder();
         embed.WithTitle("Abstimmung läuft!");
         embed.WithDescription(
-            $"Die Abstimmung für den Antrag {votechannel.Name} ({votechannel.Mention}) steht bereit!\n" +
+            $"Die Abstimmung für den Antrag ``{votechannel.Name}`` | ({votechannel.Mention}) steht bereit!\n" +
             $"**Positive Stimmen:** {positiveVotes}\n" +
             $"**Negative Stimmen:** {negativeVotes}\n" +
             $"Die Abstimmung läuft bis <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n" +
@@ -83,7 +83,7 @@ public static class MessageGenerator
         var embed = new DiscordEmbedBuilder();
         embed.WithTitle("Abstimmung beendet!");
         embed.WithDescription(
-            $"Die Abstimmung für den Antrag {votechannel.Name} ({votechannel.Mention}) ist beendet!\n" +
+            $"Die Abstimmung für den Antrag ``{votechannel.Name}`` | ({votechannel.Mention}) ist beendet!\n" +
             $"**Positive Stimmen:** {positiveVotes}\n" +
             $"**Negative Stimmen:** {negativeVotes}\n" +
             $"Die Abstimmung endete am <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n");
