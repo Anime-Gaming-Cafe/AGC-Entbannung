@@ -35,10 +35,9 @@ public class onComponentInteraction : ApplicationCommandsModule
                 {
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
                         new DiscordInteractionResponseBuilder().AsEphemeral());
-                    ulong messageid = ulong.Parse(cid.Split("_")[1]);
                     ulong channelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
                     DiscordChannel channel = await client.GetChannelAsync(channelid);
-                    DiscordMessage message = await channel.GetMessageAsync(messageid);
+                    DiscordMessage message = await channel.GetMessageAsync(e.Message.Id);
                     if (message == null)
                     {
                         await e.Interaction.EditOriginalResponseAsync(
@@ -48,7 +47,7 @@ public class onComponentInteraction : ApplicationCommandsModule
 
                     var existingVote = await Helperfunctions.UserHasVoted(e); // returns Positive, Negative or null
 
-                    if (cid == "vote_yes_" + channelid)
+                    if (cid.StartsWith("vote_yes_"))
                     {
                         if (existingVote != null)
                         {
@@ -63,7 +62,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                         await e.Interaction.EditOriginalResponseAsync(
                             new DiscordWebhookBuilder().WithContent($"Dein Vote wurde gezählt! Stimme: **Ja**"));
                     }
-                    else if (cid == "vote_no_" + channelid)
+                    else if (cid.StartsWith("vote_no_"))
                     {
                         if (existingVote != null)
                         {
@@ -92,6 +91,11 @@ public class onComponentInteraction : ApplicationCommandsModule
                         "Es ist ein Fehler aufgetreten. Bitte versuche es später erneut. Der Fehler wurde automatisch an den Entwickler weitergeleitet.");
                     embed.WithColor(DiscordColor.Red);
                     await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                    client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
+                    // print line number
+                    client.Logger.LogError($"Line: {exception.StackTrace?.Split('\n')[0]}");
+                    // log stack trace
+                    client.Logger.LogError(exception.StackTrace);
                     await ErrorReporting.SendErrorToDev(client, e.User, exception);
                 }
 

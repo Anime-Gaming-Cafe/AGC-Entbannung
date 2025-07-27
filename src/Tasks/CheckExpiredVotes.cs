@@ -61,7 +61,7 @@ public class CheckExpiredVotes
                 await using var cmd3 = new NpgsqlCommand();
                 cmd3.Connection = conn2;
                 // voteid is channelid+messageid
-                cmd3.CommandText = "DELETE FROM abstimmungen_teamler WHERE voteid IN " +
+                cmd3.CommandText = "DELETE FROM abstimmungen_teamler WHERE vote_id IN " +
                                    "(SELECT channel_id || '_' || message_id FROM abstimmungen WHERE expires_at < @endtime)";
                 cmd3.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                 await cmd3.ExecuteNonQueryAsync();
