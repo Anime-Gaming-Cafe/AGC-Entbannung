@@ -31,21 +31,29 @@ public class CheckExpiredVotes
                 while (await reader.ReadAsync())
                 {
                     long dbcid = reader.GetInt64(0);
+                    DiscordChannel antragschannel = await client.GetChannelAsync((ulong)dbcid);
                     var messageid = (ulong)reader.GetInt64(1);
-                    var channelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
-
                     // get messages from id in vote channel
                     ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
                     DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
                     DiscordMessage message = await votechannel.GetMessageAsync(messageid);
                     var nowtimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(votechannel, nowtimestamp,
+                    DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(antragschannel, nowtimestamp,
                         reader.GetInt32(5), reader.GetInt32(4));
+                    try
+                    {
+                        // delete message
+                        await message.DeleteAsync("Abstimmung abgelaufen.");
+                    }
+                    catch (Exception e)
+                    {
+                        client.Logger.LogError(e, "Error deleting expired vote message");
+                    }
 
                     DiscordMessageBuilder builder = new DiscordMessageBuilder()
                         .WithContent(Helperfunctions.getTeamPing())
                         .AddEmbed(emb);
-                    await message.RespondAsync(builder);
+                    await votechannel.SendMessageAsync(builder);
                 }
 
                 await reader.CloseAsync();
