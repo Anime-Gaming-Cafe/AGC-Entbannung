@@ -53,6 +53,13 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
             return;
         }
 
+        ulong logchannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsLogChannelId"));
+        DiscordChannel logchannel = ctx.Guild.GetChannel(logchannelid);
+        var logembed = new DiscordEmbedBuilder();
+        logembed.WithTitle("Antrag in die Abstimmung verschoben");
+        logembed.WithDescription(
+            $"Antrag <#{ctx.Channel.Id}> (`#{ctx.Channel.Name}`) wurde durch {ctx.User.Mention} ({ctx.User.Id}) in die Abstimmung verschoben.");
+
         ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
         var idOfAntragChannel = ctx.Channel.Id.ToString();
@@ -69,6 +76,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed)
             .WithContent(Helperfunctions.getTeamPing());
         var votemessage = await votechannel.SendMessageAsync(votechannelmessage);
+        await logchannel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(logembed));
 
         //move channel to vote category
         await ctx.EditResponseAsync(
