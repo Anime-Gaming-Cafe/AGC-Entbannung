@@ -12,6 +12,7 @@
     "HistoryChannelId": "ChannelID",
     "SyncIgnoredRoleList": "RoleID, RoleID, RoleID",
     "AbstimmungsChannelId": "ChannelID",
+    "AbstimmungsLogChannelId": "ChannelID",
     "VoteCategoryChannelId": "ChannelID",
     "SperreRoleId": "RoleID",
     "SperreInfoChannelId": "ChannelID",
