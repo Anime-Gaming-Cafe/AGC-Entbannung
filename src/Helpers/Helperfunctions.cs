@@ -271,4 +271,16 @@ public static class Helperfunctions
     {
         return reports.Any(report => report.active);
     }
+
+    public static int getVoteColor(int pvotes, int nvotes)
+    {
+        if (pvotes == 0 && nvotes == 0)
+            return -1; // No votes → gray (default)
+        if (pvotes == nvotes)
+            return 2; // Tie → yellow
+        if (pvotes > nvotes)
+            return 1; // More positive votes → green
+
+        return 0; // More negative votes → red
+    }
 }

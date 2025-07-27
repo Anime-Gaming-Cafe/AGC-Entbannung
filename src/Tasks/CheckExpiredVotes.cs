@@ -38,8 +38,11 @@ public class CheckExpiredVotes
                     DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
                     DiscordMessage message = await votechannel.GetMessageAsync(messageid);
                     var nowtimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    var pvotes = reader.GetInt32(4);
+                    var nvotes = reader.GetInt32(5);
+                    var colorInt = Helperfunctions.getVoteColor(pvotes, nvotes);
                     DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(antragschannel, nowtimestamp,
-                        reader.GetInt32(5), reader.GetInt32(4));
+                        nvotes, pvotes, colorInt);
                     try
                     {
                         // delete message
