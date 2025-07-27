@@ -38,7 +38,8 @@ public class CheckExpiredVotes
                     ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
                     DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
                     DiscordMessage message = await votechannel.GetMessageAsync(messageid);
-                    DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(votechannel, reader.GetInt64(2),
+                    var nowtimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(votechannel, nowtimestamp,
                         reader.GetInt32(5), reader.GetInt32(4));
 
                     DiscordMessageBuilder builder = new DiscordMessageBuilder()
