@@ -49,4 +49,56 @@ public static class MessageGenerator
         embeds.Add(embed3.Build());
         return embeds;
     }
+
+    public static DiscordEmbed getVoteEmbedInRunning(DiscordChannel votechannel, long targetTimestamp, int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
+    {
+        var color = resultForColor switch
+        {
+            0 => DiscordColor.Red, // more negative votes
+            1 => DiscordColor.Green, // more positive votes
+            2 => DiscordColor.Yellow, // tie
+            _ => DiscordColor.Gray // default color if no votes yet
+        };
+        var embed = new DiscordEmbedBuilder();
+        embed.WithTitle("Abstimmung läuft!");
+        embed.WithDescription(
+            $"Die Abstimmung für den Antrag {votechannel.Name} ({votechannel.Mention}) steht bereit!\n" +
+            $"**Positive Stimmen:** {positiveVotes}\n" +
+            $"**Negative Stimmen:** {negativeVotes}\n" +
+            $"Die Abstimmung läuft bis <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n" +
+            $"-# Die anzahl der stimmen wird alle 5 Minuten aktualisiert.\n");
+        embed.WithColor(color);
+        return embed.Build();
+    }
+
+    public static DiscordEmbed getVoteEmbedFinished(DiscordChannel votechannel, long targetTimestamp, int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
+    {
+        var color = resultForColor switch
+        {
+            0 => DiscordColor.Red, // more negative votes
+            1 => DiscordColor.Green, // more positive votes
+            2 => DiscordColor.Yellow, // tie
+            _ => DiscordColor.Gray // default color if no votes yet
+        };
+        var embed = new DiscordEmbedBuilder();
+        embed.WithTitle("Abstimmung beendet!");
+        embed.WithDescription(
+            $"Die Abstimmung für den Antrag {votechannel.Name} ({votechannel.Mention}) ist beendet!\n" +
+            $"**Positive Stimmen:** {positiveVotes}\n" +
+            $"**Negative Stimmen:** {negativeVotes}\n" +
+            $"Die Abstimmung endete am <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n");
+        embed.WithColor(color);
+        return embed.Build();
+    }
+
+    public static DiscordEmbed getVoteEmbedCanceled(DiscordChannel votechannel, long targetTimestamp)
+    {
+        var embed = new DiscordEmbedBuilder();
+        embed.WithTitle("Abstimmung abgebrochen!");
+        embed.WithDescription(
+            $"Die Abstimmung für den Antrag {votechannel.Name} ({votechannel.Mention}) wurde abgebrochen!\n" +
+            $"Die Abstimmung wurde am <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>) abgebrochen.\n\n");
+        embed.WithColor(DiscordColor.DarkRed);
+        return embed.Build();
+    }
 }
