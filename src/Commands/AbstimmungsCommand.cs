@@ -70,7 +70,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         var now16h = now + 57600;
 
         var voteembed = MessageGenerator.getVoteEmbedInRunning(ctx.Channel, now16h, 0, 0, 3);
-        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed);
+        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed).WithContent(Helperfunctions.getTeamPing());
         var votemessage = await votechannel.SendMessageAsync(
             votechannelmessage.AddEmbed(embed));
 
