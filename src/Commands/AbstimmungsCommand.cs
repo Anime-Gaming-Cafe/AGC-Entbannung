@@ -53,10 +53,6 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
             return;
         }
 
-        var embed = new DiscordEmbedBuilder();
-        embed.WithTitle("Entbannungsabstimmung");
-        embed.Timestamp = DateTimeOffset.UtcNow;
-        embed.WithDescription($"{ctx.Channel.Name} | ({ctx.Channel.Mention}) steht zur Abstimmung bereit.");
         ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
         DiscordChannel votechannel = ctx.Guild.GetChannel(votechannelid);
         var idOfAntragChannel = ctx.Channel.Id.ToString();
@@ -71,8 +67,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
 
         var voteembed = MessageGenerator.getVoteEmbedInRunning(ctx.Channel, now16h, 0, 0, 3);
         var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed).WithContent(Helperfunctions.getTeamPing());
-        var votemessage = await votechannel.SendMessageAsync(
-            votechannelmessage.AddEmbed(embed));
+        var votemessage = await votechannel.SendMessageAsync(votechannelmessage);
 
         //move channel to vote category
         await ctx.EditResponseAsync(

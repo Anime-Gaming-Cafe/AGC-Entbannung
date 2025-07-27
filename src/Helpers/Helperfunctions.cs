@@ -55,8 +55,8 @@ public static class Helperfunctions
         cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
         await cmd.ExecuteNonQueryAsync();
 
-        await using var cmd2 = new NpgsqlCommand("INSERT INTO abstimmungsvotes (vote_id, user_id, votevalue) VALUES (@voteid, @userid, @votevalue)", conn);
-        cmd2.Parameters.AddWithValue("voteid", interaction.Channel.Id + interaction.Message.Id);
+        await using var cmd2 = new NpgsqlCommand("INSERT INTO abstimmungen_teamler (vote_id, user_id, votevalue) VALUES (@voteid, @userid, @votevalue)", conn);
+        cmd2.Parameters.AddWithValue("voteid", (interaction.Channel.Id + interaction.Message.Id).ToString());
         cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
         cmd2.Parameters.AddWithValue("votevalue", positiveVote ? 1 : 0);
         await cmd2.ExecuteNonQueryAsync();
@@ -84,8 +84,9 @@ public static class Helperfunctions
         cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
         await cmd.ExecuteNonQueryAsync();
 
-        await using var cmd2 = new NpgsqlCommand("DELETE FROM abstimmungsvotes WHERE vote_id = @voteid AND user_id = @userid", conn);
-        cmd2.Parameters.AddWithValue("voteid", interaction.Channel.Id + interaction.Message.Id);
+        await using var cmd2 = new NpgsqlCommand("DELETE FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
+        var voteId = (long)interaction.Channel.Id + (long)interaction.Message.Id;
+        cmd2.Parameters.AddWithValue("voteid", voteId.ToString());
         cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
         await cmd2.ExecuteNonQueryAsync();
     }
@@ -96,8 +97,9 @@ public static class Helperfunctions
         var dbstring = DbString();
         await using var conn = new NpgsqlConnection(dbstring);
         await conn.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT votevalue FROM abstimmungsvotes WHERE vote_id = @voteid AND user_id = @userid", conn);
-        cmd.Parameters.AddWithValue("voteid", interaction.Channel.Id + interaction.Message.Id);
+        await using var cmd = new NpgsqlCommand("SELECT votevalue FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
+        var voteId = (long)interaction.Channel.Id + (long)interaction.Message.Id;
+        cmd.Parameters.AddWithValue("voteid", voteId.ToString());
         cmd.Parameters.AddWithValue("userid", (long)interaction.User.Id);
 
         await using var reader = await cmd.ExecuteReaderAsync();
