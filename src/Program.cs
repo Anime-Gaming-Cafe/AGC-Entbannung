@@ -187,6 +187,7 @@ internal sealed class Program
         _ = CheckExpiredVotes.Run(client);
         _ = CheckExpiredBlock.Run(client);
         _ = FillAutocompletions.Run(client);
+        _ = UpdateVoteMessages.Run(client);
     }
 
 
