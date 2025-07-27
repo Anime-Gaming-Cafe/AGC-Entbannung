@@ -25,42 +25,39 @@ jobs:
           script: |
             echo "SSH access verified: $(hostname)"
 
-  build-and-deploy:
+  deploy:
+    name: Deploy Linux Artifact
     runs-on: ubuntu-latest
     needs: test-ssh
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
       - name: Set version from tag
+        id: vars
         run: |
           if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
-            # Get tag from repository_dispatch payload
             TAG="${{ github.event.client_payload.tag }}"
           else
-            # Get tag from git ref (push event)
             TAG=${GITHUB_REF#refs/tags/}
           fi
 
           CLEAN_TAG=${TAG#v}
-          SHORT_HASH=$(git rev-parse --short HEAD)
-          echo "GIT_TAG_VERSION=$CLEAN_TAG+$SHORT_HASH" >> $GITHUB_ENV
-          echo "Building with version: $CLEAN_TAG+$SHORT_HASH from tag $TAG"
+          ZIP_NAME="AGC_Entbannung_linux_x64_${TAG}.zip"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          echo "GIT_TAG_VERSION=${CLEAN_TAG}+$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+      - name: Download release artifact
+        uses: dsaltares/fetch-gh-release-asset@v1.1.2
+        with:
+          file: ${{ env.ZIP_NAME }}
+          repo: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: release.zip
 
-      - name: Build
+      - name: Unpack release artifact
         run: |
-          echo "Building with version: ${{ env.GIT_TAG_VERSION }}"
-          dotnet publish -c Release -o ./publish -p:InformationalVer=${{ env.GIT_TAG_VERSION }}
-        env:
-          GIT_TAG_VERSION: ${{ env.GIT_TAG_VERSION }}
+          mkdir -p publish
+          unzip release.zip -d publish
 
       - name: Create backup
         uses: appleboy/ssh-action@master
@@ -97,23 +94,21 @@ jobs:
           script: |
             sudo systemctl restart agc-entbannung
 
-            # Wait for service to start
             sleep 20
 
             if sudo systemctl is-active --quiet agc-entbannung; then
-              echo "Service started successfully"
+              echo "✅ Service started successfully"
               echo "Deployed version: ${{ env.GIT_TAG_VERSION }}"
             else
-              echo "Service failed to start, rolling back to backup"
+              echo "❌ Service failed to start, rolling back..."
               LATEST_BACKUP=$(ls -dt /srv/DiscordBots/Backups/AGCEntbannung-* | head -n 1)
               if [ -n "$LATEST_BACKUP" ]; then
-                # Restore everything except logs and data folders
                 rsync -av --exclude='logs' --exclude='data' $LATEST_BACKUP/ /srv/DiscordBots/AGCEntbannung/
                 sudo systemctl restart agc-entbannung
-                echo "Rolled back to $LATEST_BACKUP"
+                echo "🔁 Rolled back to $LATEST_BACKUP"
                 exit 1
               else
-                echo "No backup found, cannot roll back"
+                echo "⚠️ No backup found, cannot roll back"
                 exit 1
               fi
             fi
