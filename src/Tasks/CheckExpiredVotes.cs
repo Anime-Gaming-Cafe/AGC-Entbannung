@@ -24,7 +24,7 @@ public class CheckExpiredVotes
                 await conn.OpenAsync();
                 await using NpgsqlCommand cmd = new NpgsqlCommand();
                 cmd.Connection = conn;
-                cmd.CommandText = "SELECT * FROM abstimmungen WHERE expires_at < @endtime";
+                cmd.CommandText = "SELECT * FROM abstimmungen WHERE expires_at < @endtime OR endpending = true";
                 cmd.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                 await using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
                 // get all expired votes
@@ -66,7 +66,7 @@ public class CheckExpiredVotes
                 await conn2.OpenAsync();
                 await using var cmd2 = new NpgsqlCommand();
                 cmd2.Connection = conn2;
-                cmd2.CommandText = "DELETE FROM abstimmungen WHERE expires_at < @endtime";
+                cmd2.CommandText = "DELETE FROM abstimmungen WHERE expires_at < @endtime OR endpending = true";
                 cmd2.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                 await cmd2.ExecuteNonQueryAsync();
                 // abstimmungen_teamler delete voteid
@@ -74,7 +74,7 @@ public class CheckExpiredVotes
                 cmd3.Connection = conn2;
                 // voteid is channelid+messageid
                 cmd3.CommandText = "DELETE FROM abstimmungen_teamler WHERE vote_id IN " +
-                                   "(SELECT channel_id || '_' || message_id FROM abstimmungen WHERE expires_at < @endtime)";
+                                   "(SELECT channel_id || '_' || message_id FROM abstimmungen WHERE expires_at < @endtime OR endpending = true)";
                 cmd3.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                 await cmd3.ExecuteNonQueryAsync();
                 await conn2.CloseAsync();

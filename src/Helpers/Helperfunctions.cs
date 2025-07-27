@@ -2,6 +2,7 @@
 
 using AGC_Entbannungssystem.Entities;
 using AGC_Entbannungssystem.Services;
+using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
@@ -70,6 +71,19 @@ public static class Helperfunctions
         cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
         cmd2.Parameters.AddWithValue("votevalue", positiveVote ? 1 : 0);
         await cmd2.ExecuteNonQueryAsync();
+        
+        await using var cmd3 = new NpgsqlCommand("SELECT pvotes, nvotes FROM abstimmungen WHERE message_id = @messageid", conn);
+        cmd3.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
+        await using var reader = await cmd3.ExecuteReaderAsync();
+        
+        if (await reader.ReadAsync())
+        {
+            int pvotes = reader.GetInt32(0);
+            int nvotes = reader.GetInt32(1);
+            
+            await reader.CloseAsync();
+            await UpdateEndPendingStatus(CurrentApplicationData.Client, interaction.Message.Id, pvotes, nvotes);
+        }
     }
 
 
@@ -101,6 +115,19 @@ public static class Helperfunctions
         cmd2.Parameters.AddWithValue("voteid", voteId.ToString());
         cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
         await cmd2.ExecuteNonQueryAsync();
+        
+        await using var cmd3 = new NpgsqlCommand("SELECT pvotes, nvotes FROM abstimmungen WHERE message_id = @messageid", conn);
+        cmd3.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
+        await using var reader = await cmd3.ExecuteReaderAsync();
+        
+        if (await reader.ReadAsync())
+        {
+            int pvotes = reader.GetInt32(0);
+            int nvotes = reader.GetInt32(1);
+            
+            await reader.CloseAsync();
+            await UpdateEndPendingStatus(CurrentApplicationData.Client, interaction.Message.Id, pvotes, nvotes);
+        }
     }
 
 
@@ -288,5 +315,69 @@ public static class Helperfunctions
             return 1; // More positive votes → green
 
         return 0; // More negative votes → red
+    }
+
+    public static async Task<int> GetTeamMemberCount(DiscordClient client)
+    {
+        try
+        {
+            DiscordGuild unbanGuild = await client.GetGuildAsync(GlobalProperties.UnbanServerId);
+            DiscordRole pingRole = unbanGuild.GetRole(GlobalProperties.PingRoleId);
+            
+            int teamMemberCount = unbanGuild.Members.Count(m => m.Value.Roles.Any(r => r.Id == pingRole.Id));
+            return teamMemberCount;
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
+    public static async Task<bool> CheckVoteThreshold(DiscordClient client,  int totalVotes)
+    {
+        try
+        {
+            int teamMemberCount = await GetTeamMemberCount(client);
+            if (teamMemberCount == 0) return false; 
+            
+            double votePercentage = (double)totalVotes / teamMemberCount * 100;
+            
+            return votePercentage > 70;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
+    {
+        try
+        {
+            int totalVotes = pvotes + nvotes;
+            bool thresholdReached = await CheckVoteThreshold(client, totalVotes);
+            bool isTie = pvotes == nvotes;
+            
+            var dbstring = DbString();
+            await using var conn = new NpgsqlConnection(dbstring);
+            await conn.OpenAsync();
+            
+            if (thresholdReached && !isTie)
+            {
+                await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = true WHERE message_id = @messageid", conn);
+                cmd.Parameters.AddWithValue("messageid", (long)messageId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+            else
+            {
+                await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = false WHERE message_id = @messageid", conn);
+                cmd.Parameters.AddWithValue("messageid", (long)messageId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        catch (Exception)
+        {
+            // Ignore errors
+        }
     }
 }
