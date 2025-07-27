@@ -66,10 +66,11 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
             new(ButtonStyle.Secondary, "vote_yes_" + idOfAntragChannel, "👍 Ja"),
             new(ButtonStyle.Secondary, "vote_no_" + idOfAntragChannel, "👎 Nein")
         };
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var now16h = now + 57600;
 
-
-        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons);
-
+        var voteembed = MessageGenerator.getVoteEmbedInRunning(ctx.Channel, now16h, 0, 0, 3);
+        var votechannelmessage = new DiscordMessageBuilder().AddComponents(votebuttons).AddEmbed(voteembed);
         var votemessage = await votechannel.SendMessageAsync(
             votechannelmessage.AddEmbed(embed));
 
@@ -89,18 +90,19 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         notifyembed.WithFooter("AGC Entbannungssystem");
         await ctx.Channel.SendMessageAsync(notifyembed);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Abstimmung erstellt!"));
-        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var now16h = now + 57600;
         var constring2 = Helperfunctions.DbString();
         await using var con2 = new NpgsqlConnection(constring2);
         await con2.OpenAsync();
         await using var cmd2 =
             new NpgsqlCommand(
-                "INSERT INTO abstimmungen (channel_id, message_id, expires_at) VALUES (@channelid, @messageid, @endtime)",
+                "INSERT INTO abstimmungen (channel_id, message_id, expires_at, created_by, pvotes, nvotes) VALUES (@channelid, @messageid, @endtime, @createdby, @pvotes, @nvotes)",
                 con2);
         cmd2.Parameters.AddWithValue("channelid", (long)ctx.Channel.Id);
         cmd2.Parameters.AddWithValue("messageid", (long)votemessage.Id);
         cmd2.Parameters.AddWithValue("endtime", now16h);
+        cmd2.Parameters.AddWithValue("createdby", (long)ctx.User.Id);
+        cmd2.Parameters.AddWithValue("pvotes", 0);
+        cmd2.Parameters.AddWithValue("nvotes", 0);
         await cmd2.ExecuteNonQueryAsync();
         await con2.CloseAsync();
     }
