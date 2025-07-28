@@ -47,8 +47,8 @@ public sealed class VoteStats : ApplicationCommandsModule
         DiscordMessage voteMessage = await voteChannel.GetMessageAsync((ulong)messageId);
         var voteid = ((long)voteMessage.Id + (long)voteChannel.Id).ToString();
         int color = Helperfunctions.getVoteColor(pvotes, nvotes);
-        await using var cmd2 = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen_teamler WHERE vote_id = @messageid", conn);
-        cmd2.Parameters.AddWithValue("messageid", messageId);
+        await using var cmd2 = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen_teamler WHERE vote_id = @voteid", conn);
+        cmd2.Parameters.AddWithValue("voteid", voteid);
         await using var reader2 = await cmd2.ExecuteReaderAsync();
         var positiveVotes = new List<string>();
         var negativeVotes = new List<string>();
