@@ -55,12 +55,12 @@ public sealed class VoteStats : ApplicationCommandsModule
         while (await reader2.ReadAsync())
         {
             long userId = reader2.GetInt64(0);
-            bool voteValue = reader2.GetBoolean(1);
-            if (voteValue)
+            int voteValue = reader2.GetInt32(1);
+            if (voteValue == 1)
             {
                 positiveVotes.Add(IdToMention(userId));
             }
-            else
+            else if (voteValue == 0)
             {
                 negativeVotes.Add(IdToMention(userId));
             }
