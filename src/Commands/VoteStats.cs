@@ -75,7 +75,7 @@ public sealed class VoteStats : ApplicationCommandsModule
                                 $"**User, die Negativ abgestimmt haben:**\n" +
                                     $"{(negativeVotes.Count > 0 ? string.Join(", ", negativeVotes) : "Keine negativen Stimmen")}\n\n" +
                              $"Die Abstimmung endet am <t:{expiresAt}:f> (<t:{expiresAt}:R>)\n\n" +
-                             $"**Abstimmung erstellt von:** {IdToMention(long.Parse(createdby))}\n" +
+                             $"**Abstimmung erstellt von:** {IdToMention(createdby)}\n" +
                              $"**Abstimmung ID:** {voteid}\n" +
                              $"{(endpending ? $"Die Abstimmung ist noch nicht beendet. Endet: <t:{expiresAt}:f> (<t:{expiresAt}:R>)" : "Die Abstimmung ist bereits beendet.")}")
             .WithColor(color);
