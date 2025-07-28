@@ -390,8 +390,8 @@ public static class Helperfunctions
             await using var conn = new NpgsqlConnection(dbstring);
             await conn.OpenAsync();
             
-            if ((thresholdReached && !isTie) || outcomeDecided)
-
+            // Never end a vote if there's a tie
+            if (!isTie && ((thresholdReached) || outcomeDecided))
             {
                 await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = true WHERE message_id = @messageid", conn);
                 cmd.Parameters.AddWithValue("messageid", (long)messageId);

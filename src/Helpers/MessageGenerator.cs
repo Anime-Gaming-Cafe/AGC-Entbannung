@@ -51,7 +51,7 @@ public static class MessageGenerator
     }
 
     public static DiscordEmbed getVoteEmbedInRunning(DiscordChannel votechannel, long targetTimestamp,
-        int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
+        int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0, int teamMemberCount = 0)
     {
         var color = resultForColor switch
         {
@@ -60,12 +60,17 @@ public static class MessageGenerator
             2 => DiscordColor.Yellow, // tie
             _ => DiscordColor.Gray // default color if no votes yet
         };
+        
+        int totalVotes = positiveVotes + negativeVotes;
+        double votePercentage = teamMemberCount > 0 ? (double)totalVotes / teamMemberCount * 100 : 0;
+        
         var embed = new DiscordEmbedBuilder();
         embed.WithTitle("Abstimmung läuft!");
         embed.WithDescription(
             $"Die Abstimmung für den Antrag ``{votechannel.Name}`` | ({votechannel.Mention}) steht bereit!\n" +
             $"**Positive Stimmen:** {positiveVotes}\n" +
             $"**Negative Stimmen:** {negativeVotes}\n" +
+            $"**Abstimmungsbeteiligung:** {votePercentage:F1}% ({totalVotes}/{teamMemberCount})\n" +
             $"Die Abstimmung läuft bis <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n" +
             $"-# Die Anzahl der Stimmen wird alle 5 Minuten aktualisiert.\n");
         embed.WithColor(color);
@@ -73,7 +78,7 @@ public static class MessageGenerator
     }
 
     public static DiscordEmbed getVoteEmbedFinished(DiscordChannel votechannel, long targetTimestamp,
-        int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0)
+        int negativeVotes = 0, int positiveVotes = 0, int resultForColor = 0, int teamMemberCount = 0)
     {
         var color = resultForColor switch
         {
@@ -82,12 +87,17 @@ public static class MessageGenerator
             2 => DiscordColor.Yellow, // tie
             _ => DiscordColor.Gray // default color if no votes yet
         };
+        
+        int totalVotes = positiveVotes + negativeVotes;
+        double votePercentage = teamMemberCount > 0 ? (double)totalVotes / teamMemberCount * 100 : 0;
+        
         var embed = new DiscordEmbedBuilder();
         embed.WithTitle("Abstimmung beendet!");
         embed.WithDescription(
             $"Die Abstimmung für den Antrag ``{votechannel.Name}`` | ({votechannel.Mention}) ist beendet!\n" +
             $"**Positive Stimmen:** {positiveVotes}\n" +
             $"**Negative Stimmen:** {negativeVotes}\n" +
+            $"**Abstimmungsbeteiligung:** {votePercentage:F1}% ({totalVotes}/{teamMemberCount})\n" +
             $"Die Abstimmung endete am <t:{targetTimestamp}:f> (<t:{targetTimestamp}:R>)\n\n");
         embed.WithColor(color);
         return embed.Build();
