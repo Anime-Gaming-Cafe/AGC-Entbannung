@@ -40,7 +40,7 @@ public sealed class VoteStats : ApplicationCommandsModule
         int pvotes = reader.GetInt32(4);
         int nvotes = reader.GetInt32(5);
         bool endpending = reader.GetBoolean(6);
-        var createdby = reader.GetString(3);
+        var createdby = reader.GetInt64(3);
         
         await reader.CloseAsync();
         DiscordChannel voteChannel = await ctx.Client.GetChannelAsync(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId")));
