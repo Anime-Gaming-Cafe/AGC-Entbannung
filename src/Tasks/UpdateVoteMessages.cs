@@ -52,9 +52,11 @@ public static class UpdateVoteMessages
             ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
             DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
             DiscordMessage message = await votechannel.GetMessageAsync(messageId);
+            
+            DiscordChannel antragchannel = await client.GetChannelAsync((ulong)antragchannelid);
 
             int color = Helperfunctions.getVoteColor(pvotes, nvotes);
-            DiscordEmbed vembed = MessageGenerator.getVoteEmbedInRunning(votechannel, expiresAt, nvotes, pvotes, color);
+            DiscordEmbed vembed = MessageGenerator.getVoteEmbedInRunning(antragchannel, expiresAt, nvotes, pvotes, color);
 
             var votebuttons = new List<DiscordButtonComponent>
             {
