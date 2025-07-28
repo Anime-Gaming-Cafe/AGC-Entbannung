@@ -41,8 +41,9 @@ public class CheckExpiredVotes
                     var pvotes = reader.GetInt32(4);
                     var nvotes = reader.GetInt32(5);
                     var colorInt = Helperfunctions.getVoteColor(pvotes, nvotes);
+                    int teamMemberCount = await Helperfunctions.GetTeamMemberCount(client);
                     DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(antragschannel, nowtimestamp,
-                        nvotes, pvotes, colorInt);
+                        nvotes, pvotes, colorInt, teamMemberCount);
                     try
                     {
                         // delete message

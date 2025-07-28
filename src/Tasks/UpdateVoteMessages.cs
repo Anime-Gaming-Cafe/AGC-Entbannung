@@ -55,8 +55,9 @@ public static class UpdateVoteMessages
             
             DiscordChannel antragchannel = await client.GetChannelAsync((ulong)antragchannelid);
 
+            int teamMemberCount = await Helperfunctions.GetTeamMemberCount(client);
             int color = Helperfunctions.getVoteColor(pvotes, nvotes);
-            DiscordEmbed vembed = MessageGenerator.getVoteEmbedInRunning(antragchannel, expiresAt, nvotes, pvotes, color);
+            DiscordEmbed vembed = MessageGenerator.getVoteEmbedInRunning(antragchannel, expiresAt, nvotes, pvotes, color, teamMemberCount);
 
             var votebuttons = new List<DiscordButtonComponent>
             {
