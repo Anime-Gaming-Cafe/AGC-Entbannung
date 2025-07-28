@@ -26,7 +26,7 @@ public sealed class VoteStats : ApplicationCommandsModule
         string dbstring = Helperfunctions.DbString();
         await using var conn = new Npgsql.NpgsqlConnection(dbstring);
         await conn.OpenAsync();
-        await using var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen WHERE antragskanal = @channelid", conn);
+        await using var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen WHERE channel_id = @channelid", conn);
         cmd.Parameters.AddWithValue("channelid", (long)channel.Id);
         await using var reader = await cmd.ExecuteReaderAsync();
         if (!await reader.ReadAsync())
