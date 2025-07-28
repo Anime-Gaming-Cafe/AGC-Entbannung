@@ -206,7 +206,7 @@ internal sealed class Program
             if (ex.FailedChecks.Any(x => x is ApplicationCommandRequireUserPermissionsAttribute))
             {
                 await e.Context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent("Du hast kei").AsEphemeral());
+                    new DiscordInteractionResponseBuilder().WithContent("Du hast keine Berechtigung :3").AsEphemeral());
                 e.Handled = true;
                 return;
             }
