@@ -19,7 +19,7 @@ public sealed class VoteStats : ApplicationCommandsModule
         if (!await isChannelInVotingChannel(channel))
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().WithContent("Dieser Kanal ist nicht in einer Abstimmung!"));
+                new DiscordInteractionResponseBuilder().WithContent("Dieser Kanal ist nicht in einer Abstimmung!").AsEphemeral());
             return;
         }
 
@@ -32,7 +32,7 @@ public sealed class VoteStats : ApplicationCommandsModule
         if (!await reader.ReadAsync())
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().WithContent("Keine Abstimmung für diesen Kanal gefunden!"));
+                new DiscordInteractionResponseBuilder().WithContent("Keine Abstimmung für diesen Kanal gefunden!").AsEphemeral());
             return;
         }
         long messageId = reader.GetInt64(1);
