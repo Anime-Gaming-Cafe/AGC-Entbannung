@@ -77,7 +77,7 @@ public sealed class VoteStats : ApplicationCommandsModule
                              $"Die Abstimmung endet am <t:{expiresAt}:f> (<t:{expiresAt}:R>)\n\n" +
                              $"**Abstimmung erstellt von:** {IdToMention(createdby)}\n" +
                              $"**Abstimmung ID:** {voteid}\n" +
-                             $"{(endpending ? $"Die Abstimmung ist noch nicht beendet. Endet: <t:{expiresAt}:f> (<t:{expiresAt}:R>)" : "Die Abstimmung ist bereits beendet.")}")
+                             $"Die Abstimmung ist noch nicht beendet. Endet: <t:{expiresAt}:f> (<t:{expiresAt}:R>)")
             .WithColor(color);
         
         // usual format is antrag-0000
