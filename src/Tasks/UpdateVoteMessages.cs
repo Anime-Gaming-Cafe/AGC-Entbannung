@@ -76,7 +76,7 @@ public static class UpdateVoteMessages
     {
         try
         {
-            using var context = AgcDbContextFactory.CreateDbContext();
+            await using var context = AgcDbContextFactory.CreateDbContext();
             var vote = await context.Abstimmungen
                 .FirstOrDefaultAsync(a => a.MessageId == (long)messageId);
 
