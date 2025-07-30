@@ -27,7 +27,4 @@ public class Abstimmung
 
     [Column("endpending")]
     public bool EndPending { get; set; }
-
-    // Navigation property
-    public virtual ICollection<AbstimmungTeamler> TeamlerVotes { get; set; } = new List<AbstimmungTeamler>();
 }
