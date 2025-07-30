@@ -4,7 +4,7 @@ using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Exceptions;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
@@ -18,46 +18,39 @@ public class CheckExpiredBlock
         {
             try
             {
-                var dbstring = Helperfunctions.DbString();
-                await using var conn = new NpgsqlConnection(dbstring);
-                await conn.OpenAsync();
-                await using var cmd = new NpgsqlCommand();
-                cmd.Connection = conn;
-                cmd.CommandText = "SELECT * FROM antragssperre WHERE expires_at < @endtime";
-                cmd.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                await using var reader = await cmd.ExecuteReaderAsync();
+                using var context = AgcDbContextFactory.CreateDbContext();
+                var currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                
+                var expiredBlocks = await context.Antragssperren
+                    .Where(a => a.ExpiresAt < currentTime)
+                    .ToListAsync();
 
-                while (await reader.ReadAsync())
+                var guild = await client.GetGuildAsync(
+                    ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId")));
+                var roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreRoleId"));
+                var role = guild.GetRole(roleid);
+
+                foreach (var block in expiredBlocks)
                 {
-                    var userid = (ulong)reader.GetInt64(0);
-
-                    var guild = await client.GetGuildAsync(
-                        ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId")));
-
-                    var roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreRoleId"));
                     try
                     {
-                        var member = await guild.GetMemberAsync(userid);
-                        var role = guild.GetRole(roleid);
+                        var member = await guild.GetMemberAsync((ulong)block.UserId);
                         await member.RevokeRoleAsync(role, "Sperre abgelaufen.");
                     }
                     catch (NotFoundException e)
                     {
-                        // ignored
+                        // ignored - user not in guild
                     }
 
-                    await using var conn2 = new NpgsqlConnection(dbstring);
-                    await conn2.OpenAsync();
-                    await using var cmd2 = new NpgsqlCommand();
-                    cmd2.Connection = conn2;
-                    cmd2.CommandText = "DELETE FROM antragssperre WHERE user_id = @userid";
-                    cmd2.Parameters.AddWithValue("userid", (long)userid);
-                    await cmd2.ExecuteNonQueryAsync();
-                    await conn2.CloseAsync();
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }
 
-                await conn.CloseAsync();
+                // Remove expired blocks from database
+                if (expiredBlocks.Any())
+                {
+                    context.Antragssperren.RemoveRange(expiredBlocks);
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception e)
             {

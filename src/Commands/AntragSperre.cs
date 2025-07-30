@@ -1,6 +1,7 @@
 ﻿#region
 
 using AGC_Entbannungssystem.AutocompletionProviders;
+using AGC_Entbannungssystem.Entities.Database;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
@@ -9,8 +10,8 @@ using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 #endregion
 
@@ -30,11 +31,9 @@ public class AntragSperre : ApplicationCommandsModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
-        var constring = Helperfunctions.DbString();
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe Eingaben..."));
-
 
         if (!antragsnummer.All(char.IsDigit))
         {
@@ -43,24 +42,21 @@ public class AntragSperre : ApplicationCommandsModule
             return;
         }
 
-
         ulong roleid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreRoleId"));
         DiscordRole role = ctx.Guild.GetRole(roleid);
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe, ob der User bereits gesperrt ist..."));
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
-        cmd.Parameters.AddWithValue("userid", (long)user.Id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (reader.HasRows)
+
+        using var context = AgcDbContextFactory.CreateDbContext();
+        var existingSperre = await context.Antragssperren
+            .FirstOrDefaultAsync(a => a.UserId == (long)user.Id);
+
+        if (existingSperre != null)
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent("⚠️ Der User ist bereits gesperrt!"));
             return;
         }
-
-        await con.CloseAsync();
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent(
@@ -79,16 +75,14 @@ public class AntragSperre : ApplicationCommandsModule
         }
 
         var timestamp = DateTimeOffset.UtcNow.AddMonths(3).ToUnixTimeSeconds();
-        await using var con2 = new NpgsqlConnection(constring);
-        await con2.OpenAsync();
-        await using var cmd2 =
-            new NpgsqlCommand(
-                "INSERT INTO antragssperre (user_id, reason, expires_at) VALUES (@userid, @reason, @timestamp)", con2);
-        cmd2.Parameters.AddWithValue("userid", (long)user.Id);
-        cmd2.Parameters.AddWithValue("reason", reason);
-        cmd2.Parameters.AddWithValue("timestamp", timestamp);
-        await cmd2.ExecuteNonQueryAsync();
-        await con2.CloseAsync();
+        var antragssperre = new Antragssperre
+        {
+            UserId = (long)user.Id,
+            Reason = reason,
+            ExpiresAt = timestamp
+        };
+        context.Antragssperren.Add(antragssperre);
+        await context.SaveChangesAsync();
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("\u2705 Die Sperre wurde eingetragen!"));
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder();

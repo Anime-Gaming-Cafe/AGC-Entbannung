@@ -4,8 +4,8 @@ using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 #endregion
 
@@ -19,66 +19,65 @@ public class CheckExpiredVotes
         {
             try
             {
-                string dbstring = Helperfunctions.DbString();
-                await using var conn = new NpgsqlConnection(dbstring);
-                await conn.OpenAsync();
-                await using NpgsqlCommand cmd = new NpgsqlCommand();
-                cmd.Connection = conn;
-                cmd.CommandText = "SELECT * FROM abstimmungen WHERE expires_at < @endtime OR endpending = true";
-                cmd.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                await using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-                // get all expired votes
-                while (await reader.ReadAsync())
+                using var context = AgcDbContextFactory.CreateDbContext();
+                var currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                
+                var expiredVotes = await context.Abstimmungen
+                    .Where(a => a.ExpiresAt < currentTime || a.EndPending)
+                    .ToListAsync();
+                
+                // Process each expired vote
+                foreach (var vote in expiredVotes)
                 {
-                    long dbcid = reader.GetInt64(0);
-                    DiscordChannel antragschannel = await client.GetChannelAsync((ulong)dbcid);
-                    var messageid = (ulong)reader.GetInt64(1);
-                    // get messages from id in vote channel
-                    ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
-                    DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
-                    DiscordMessage message = await votechannel.GetMessageAsync(messageid);
-                    var nowtimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    var pvotes = reader.GetInt32(4);
-                    var nvotes = reader.GetInt32(5);
-                    var colorInt = Helperfunctions.getVoteColor(pvotes, nvotes);
-                    int teamMemberCount = await Helperfunctions.GetTeamMemberCount(client);
-                    DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(antragschannel, nowtimestamp,
-                        nvotes, pvotes, colorInt, teamMemberCount);
                     try
                     {
-                        // delete message
-                        await message.DeleteAsync("Abstimmung abgelaufen.");
-                    }
-                    catch (Exception e)
-                    {
-                        client.Logger.LogError(e, "Error deleting expired vote message");
-                    }
+                        DiscordChannel antragschannel = await client.GetChannelAsync((ulong)vote.ChannelId);
+                        var messageid = (ulong)vote.MessageId;
+                        
+                        // get messages from id in vote channel
+                        ulong votechannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId"));
+                        DiscordChannel votechannel = await client.GetChannelAsync(votechannelid);
+                        DiscordMessage message = await votechannel.GetMessageAsync(messageid);
+                        
+                        var nowtimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                        var colorInt = Helperfunctions.getVoteColor(vote.PositiveVotes, vote.NegativeVotes);
+                        int teamMemberCount = await Helperfunctions.GetTeamMemberCount(client);
+                        DiscordEmbed emb = MessageGenerator.getVoteEmbedFinished(antragschannel, nowtimestamp,
+                            vote.NegativeVotes, vote.PositiveVotes, colorInt, teamMemberCount);
+                        
+                        try
+                        {
+                            // delete message
+                            await message.DeleteAsync("Abstimmung abgelaufen.");
+                        }
+                        catch (Exception e)
+                        {
+                            client.Logger.LogError(e, "Error deleting expired vote message");
+                        }
 
-                    DiscordMessageBuilder builder = new DiscordMessageBuilder()
-                        .WithContent(Helperfunctions.getTeamPing())
-                        .AddEmbed(emb);
-                    await votechannel.SendMessageAsync(builder);
+                        DiscordMessageBuilder builder = new DiscordMessageBuilder()
+                            .WithContent(Helperfunctions.getTeamPing())
+                            .AddEmbed(emb);
+                        await votechannel.SendMessageAsync(builder);
+                    }
+                    catch (Exception ex)
+                    {
+                        client.Logger.LogError(ex, "Error processing individual expired vote");
+                    }
                 }
 
-                await reader.CloseAsync();
-                await conn.CloseAsync();
-                // delete all expired votes from db
-                await using var conn2 = new NpgsqlConnection(dbstring);
-                await conn2.OpenAsync();
-                await using var cmd2 = new NpgsqlCommand();
-                cmd2.Connection = conn2;
-                cmd2.CommandText = "DELETE FROM abstimmungen WHERE expires_at < @endtime OR endpending = true";
-                cmd2.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                await cmd2.ExecuteNonQueryAsync();
-                // abstimmungen_teamler delete voteid
-                await using var cmd3 = new NpgsqlCommand();
-                cmd3.Connection = conn2;
-                // voteid is channelid+messageid
-                cmd3.CommandText = "DELETE FROM abstimmungen_teamler WHERE vote_id IN " +
-                                   "(SELECT channel_id || '_' || message_id FROM abstimmungen WHERE expires_at < @endtime OR endpending = true)";
-                cmd3.Parameters.AddWithValue("endtime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                await cmd3.ExecuteNonQueryAsync();
-                await conn2.CloseAsync();
+                // Remove expired votes and their team member votes
+                if (expiredVotes.Any())
+                {
+                    var expiredVoteIds = expiredVotes.Select(v => (v.ChannelId + v.MessageId).ToString()).ToList();
+                    var teamlerVotesToDelete = await context.AbstimmungenTeamler
+                        .Where(t => expiredVoteIds.Contains(t.VoteId))
+                        .ToListAsync();
+                    
+                    context.AbstimmungenTeamler.RemoveRange(teamlerVotesToDelete);
+                    context.Abstimmungen.RemoveRange(expiredVotes);
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception err)
             {
