@@ -4,8 +4,8 @@ using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.ApplicationCommands;
-using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +13,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AGC_Entbannungssystem.Eventhandler.UnbanGuild;
 
+[EventHandler]
 public class onGuildMemberAdded : ApplicationCommandsModule
 {
+    [Event]
     public async Task GuildMemberAdded(DiscordClient client, GuildMemberAddEventArgs e)
     {
         _ = Task.Run(async () =>
