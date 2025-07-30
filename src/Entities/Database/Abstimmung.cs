@@ -16,6 +16,9 @@ public class Abstimmung
     [Column("expires_at")]
     public long ExpiresAt { get; set; }
 
+    [Column("created_by")]
+    public long CreatedBy { get; set; }
+
     [Column("pvotes")]
     public int PositiveVotes { get; set; }
 

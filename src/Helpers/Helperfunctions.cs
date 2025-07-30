@@ -192,9 +192,9 @@ public static class Helperfunctions
         return antragsverlauf.Select(a => new AntragshistorieDaten
         {
             user_id = a.UserId,
-            antragsnummer = a.Antragsnummer,
-            unbanned = a.Unbanned,
-            grund = a.Grund,
+            antragsnummer = a.AntragsId,
+            unbanned = a.Entbannt,
+            grund = a.Reason,
             mod_id = a.ModId,
             timestamp = a.Timestamp
         }).ToList();

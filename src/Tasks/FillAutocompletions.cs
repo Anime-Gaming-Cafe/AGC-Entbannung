@@ -1,9 +1,10 @@
 ﻿#region
 
 using AGC_Entbannungssystem.Helpers;
+using AGC_Entbannungssystem.Services;
 using DisCatSharp;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 #endregion
 
@@ -20,31 +21,25 @@ public static class FillAutocompletions
         {
             try
             {
-                var consting = Helperfunctions.DbString(); // psql
-                await using var con = new NpgsqlConnection(consting);
-                await con.OpenAsync();
-                await using var cmd = new NpgsqlCommand("SELECT data FROM autocompletions WHERE type = 'sperre'", con);
-                await using var reader = await cmd.ExecuteReaderAsync();
+                await using var context = AgcDbContextFactory.CreateDbContext();
+
+                // Load Sperre completions
+                var sperreData = await context.Autocompletions
+                    .Where(a => a.Type == "sperre")
+                    .Select(a => a.Data)
+                    .ToListAsync();
+                
                 SperreCompletions.Clear();
-                while (await reader.ReadAsync())
-                {
-                    SperreCompletions.Add(reader.GetString(0));
-                }
+                SperreCompletions.AddRange(sperreData);
 
-                await reader.CloseAsync();
-                await con.CloseAsync();
-
-                await using var con2 = new NpgsqlConnection(consting);
-                await con2.OpenAsync();
-
-                await using var cmd2 =
-                    new NpgsqlCommand("SELECT data FROM autocompletions WHERE type = 'entbannung'", con2);
-                await using var reader2 = await cmd2.ExecuteReaderAsync();
+                // Load Entbannung completions
+                var entbannungData = await context.Autocompletions
+                    .Where(a => a.Type == "entbannung")
+                    .Select(a => a.Data)
+                    .ToListAsync();
+                
                 EntbannungsCompletions.Clear();
-                while (await reader2.ReadAsync())
-                {
-                    EntbannungsCompletions.Add(reader2.GetString(0));
-                }
+                EntbannungsCompletions.AddRange(entbannungData);
             }
             catch (Exception err)
             {

@@ -5,6 +5,7 @@ using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace AGC_Entbannungssystem.Commands;
 
@@ -23,48 +24,48 @@ public sealed class VoteStats : ApplicationCommandsModule
             return;
         }
 
-        string dbstring = Helperfunctions.DbString();
-        await using var conn = new Npgsql.NpgsqlConnection(dbstring);
-        await conn.OpenAsync();
-        await using var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen WHERE channel_id = @channelid", conn);
-        cmd.Parameters.AddWithValue("channelid", (long)channel.Id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (!await reader.ReadAsync())
+        await using var context = AgcDbContextFactory.CreateDbContext();
+
+        var abstimmung = await context.Abstimmungen
+            .FirstOrDefaultAsync(a => a.ChannelId == (long)channel.Id);
+
+        if (abstimmung == null)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent("Keine Abstimmung für diesen Kanal gefunden!").AsEphemeral());
             return;
         }
-        long messageId = reader.GetInt64(1);
-        long expiresAt = reader.GetInt64(2);
-        int pvotes = reader.GetInt32(4);
-        int nvotes = reader.GetInt32(5);
-        bool endpending = reader.GetBoolean(6);
-        var createdby = reader.GetInt64(3);
+
+        long messageId = abstimmung.MessageId;
+        long expiresAt = abstimmung.ExpiresAt;
+        int pvotes = abstimmung.PositiveVotes;
+        int nvotes = abstimmung.NegativeVotes;
+        var createdby = abstimmung.CreatedBy;
         
-        await reader.CloseAsync();
         DiscordChannel voteChannel = await ctx.Client.GetChannelAsync(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AbstimmungsChannelId")));
         DiscordMessage voteMessage = await voteChannel.GetMessageAsync((ulong)messageId);
         var voteid = ((long)voteMessage.Id + (long)voteChannel.Id).ToString();
         int color = Helperfunctions.getVoteColor(pvotes, nvotes);
-        await using var cmd2 = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen_teamler WHERE vote_id = @voteid", conn);
-        cmd2.Parameters.AddWithValue("voteid", voteid);
-        await using var reader2 = await cmd2.ExecuteReaderAsync();
+
+        var teamlerVotes = await context.AbstimmungenTeamler
+            .Where(t => t.VoteId == voteid)
+            .ToListAsync();
+
         var positiveVotes = new List<string>();
         var negativeVotes = new List<string>();
-        while (await reader2.ReadAsync())
+
+        foreach (var vote in teamlerVotes)
         {
-            long userId = reader2.GetInt64(0);
-            int voteValue = reader2.GetInt32(1);
-            if (voteValue == 1)
+            if (vote.VoteValue == 1)
             {
-                positiveVotes.Add(IdToMention(userId));
+                positiveVotes.Add(IdToMention(vote.UserId));
             }
-            else if (voteValue == 0)
+            else if (vote.VoteValue == 0)
             {
-                negativeVotes.Add(IdToMention(userId));
+                negativeVotes.Add(IdToMention(vote.UserId));
             }
         }
+
         var voteEmbed = new DiscordEmbedBuilder()
             .WithTitle("Abstimmungsstatistiken")
             .WithDescription($"Abstimmung für den Antrag ``{channel.Name}`` | ({channel.Mention})\n" +
@@ -105,14 +106,8 @@ public sealed class VoteStats : ApplicationCommandsModule
     
     private static async Task<bool> isChannelInVotingChannel(DiscordChannel channel)
     {
-        string dbstring = Helperfunctions.DbString();
-        await using var conn = new Npgsql.NpgsqlConnection(dbstring);
-        await conn.OpenAsync();
-        await using var cmd = new Npgsql.NpgsqlCommand("SELECT * FROM abstimmungen WHERE channel_id = @channelid", conn);
-        cmd.Parameters.AddWithValue("channelid", (long)channel.Id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        return await reader.ReadAsync();
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        return await context.Abstimmungen
+            .AnyAsync(a => a.ChannelId == (long)channel.Id);
     }
 }
-    
-    

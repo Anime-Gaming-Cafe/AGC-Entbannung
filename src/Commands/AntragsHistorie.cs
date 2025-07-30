@@ -1,5 +1,6 @@
 ﻿#region
 
+using AGC_Entbannungssystem.Entities.Database;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp.ApplicationCommands;
@@ -7,7 +8,7 @@ using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
@@ -30,7 +31,6 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
-        var constring = Helperfunctions.DbString();
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe Eingaben..."));
@@ -43,39 +43,37 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
             return;
         }
 
-        // check if antragsnummer already exists
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM antragsverlauf WHERE antrags_id = @antragsnummer", con);
-        cmd.Parameters.AddWithValue("antragsnummer", antragsnummer);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (reader.HasRows)
+        await using var context = AgcDbContextFactory.CreateDbContext();
+
+        // Check if antragsnummer already exists
+        var existingAntrag = await context.Antragsverlauf
+            .FirstOrDefaultAsync(a => a.AntragsId == antragsnummer);
+
+        if (existingAntrag != null)
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent("⚠️ Die Antragsnummer existiert bereits!"));
             return;
         }
 
-        // begin to write to db
+        // Create new entry
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Schreibe in die Datenbank..."));
         await Task.Delay(1000);
-        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        long userid = (long)user.Id;
-        long modid = (long)ctx.User.Id;
-        bool isunbanned = isUnbanned(status);
-        await using var con2 = new NpgsqlConnection(constring);
-        await con2.OpenAsync();
-        await using var cmd2 = new NpgsqlCommand(
-            "INSERT INTO antragsverlauf (antrags_id, user_id, mod_id, timestamp, entbannt, reason) VALUES (@antragsnummer, @userid, @modid, @timestamp, @isunbanned, @grund)",
-            con2);
-        cmd2.Parameters.AddWithValue("antragsnummer", antragsnummer);
-        cmd2.Parameters.AddWithValue("userid", userid);
-        cmd2.Parameters.AddWithValue("modid", modid);
-        cmd2.Parameters.AddWithValue("timestamp", timestamp);
-        cmd2.Parameters.AddWithValue("isunbanned", isunbanned);
-        cmd2.Parameters.AddWithValue("grund", grund);
-        await cmd2.ExecuteNonQueryAsync();
+
+        var antragsverlauf = new Antragsverlauf
+        {
+            AntragsId = antragsnummer,
+            UserId = (long)user.Id,
+            ModId = (long)ctx.User.Id,
+            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Entbannt = isUnbanned(status),
+            Reason = grund
+        };
+
+        context.Antragsverlauf.Add(antragsverlauf);
+        await context.SaveChangesAsync();
+
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("✅ Antrag wurde erfolgreich eingetragen!"));
 
@@ -105,30 +103,30 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
-        var constring = Helperfunctions.DbString();
+
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Lade Daten... <a:agcutils_loading:952604537515024514>"));
         await Task.Delay(1000);
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM antragsverlauf ORDER BY timestamp DESC LIMIT 5", con);
-        await using var reader = await cmd.ExecuteReaderAsync();
+
+        await using var context = AgcDbContextFactory.CreateDbContext();
+
+        var recentAnträge = await context.Antragsverlauf
+            .OrderByDescending(a => a.Timestamp)
+            .Take(5)
+            .ToListAsync();
+
         var eb = new DiscordEmbedBuilder();
         eb.WithColor(DiscordColor.Blurple);
-        // schema user_id bigint, antrags_id varchar, entbannt boolean, reason text, mod_id bigint, timestamp bigint
-        int i = 0;
+
         int pos = 0;
         int neg = 0;
-        while (await reader.ReadAsync())
-        {
-            var user = await ctx.Client.GetUserAsync((ulong)reader.GetInt64(0));
-            var antragsnummer = reader.GetString(1);
-            bool unbanned = reader.GetBoolean(2);
-            var grund = reader.GetString(3);
-            var mod = await ctx.Client.GetUserAsync((ulong)reader.GetInt64(4));
-            var timestamp = reader.GetInt64(5);
 
-            if (unbanned)
+        foreach (var antrag in recentAnträge)
+        {
+            var user = await ctx.Client.GetUserAsync((ulong)antrag.UserId);
+            var mod = await ctx.Client.GetUserAsync((ulong)antrag.ModId);
+
+            if (antrag.Entbannt)
             {
                 pos++;
             }
@@ -137,17 +135,16 @@ public sealed class AntragsHistorie : ApplicationCommandsModule
                 neg++;
             }
 
-            eb.AddField(new DiscordEmbedField($"Antragsnummer: {antragsnummer}",
+            eb.AddField(new DiscordEmbedField($"Antragsnummer: {antrag.AntragsId}",
                 $"> User: {user.Mention} ({user.Id})\n" +
-                $"> Entbannung: {Helperfunctions.BoolToEmoji(unbanned)}\n" +
-                $"> Grund: ``{grund}``\n" +
+                $"> Entbannung: {Helperfunctions.BoolToEmoji(antrag.Entbannt)}\n" +
+                $"> Grund: ``{antrag.Reason}``\n" +
                 $"> Bearbeitet von: {mod.Mention} ({mod.Id})\n" +
-                $"> Zeitpunkt: <t:{timestamp}:f> (<t:{timestamp}:R>)"));
-            i++;
+                $"> Zeitpunkt: <t:{antrag.Timestamp}:f> (<t:{antrag.Timestamp}:R>)"));
             await Task.Delay(100);
         }
 
-        eb.WithTitle($"Letzte {i} Anträge");
+        eb.WithTitle($"Letzte {recentAnträge.Count} Anträge");
         eb.WithFooter($"Entbannt: {pos} | Nicht Entbannt: {neg}");
 
         await ctx.EditResponseAsync(
