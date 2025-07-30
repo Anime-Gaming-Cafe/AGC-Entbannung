@@ -15,7 +15,7 @@ public static class UpdateVoteMessages
         {
             try
             {
-                using var context = AgcDbContextFactory.CreateDbContext();
+                await using var context = AgcDbContextFactory.CreateDbContext();
                 var currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 
                 var activeVotes = await context.Abstimmungen

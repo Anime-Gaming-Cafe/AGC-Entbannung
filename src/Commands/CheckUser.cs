@@ -9,6 +9,7 @@ using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.Exceptions;
+using static AGC_Entbannungssystem.Helpers.Helperfunctions;
 
 #endregion
 
@@ -45,7 +46,7 @@ public sealed class CheckUser : ApplicationCommandsModule
         {
             try
             {
-                bsreportlist = await Helperfunctions.BSReportToWarn(user);
+                bsreportlist = await BSReportToWarn(user);
             }
             catch (Exception)
             {
@@ -53,14 +54,14 @@ public sealed class CheckUser : ApplicationCommandsModule
 
             try
             {
-                bs_status = Helperfunctions.HasActiveBannSystemReport(bsreportlist);
+                bs_status = HasActiveBannSystemReport(bsreportlist);
             }
             catch (Exception)
             {
             }
         }
 
-        var antragshistorie = await Helperfunctions.GetAntragshistorie(user);
+        var antragshistorie = await GetAntragshistorie(user);
         Console.WriteLine(antragshistorie.Count);
         string description = "";
 
@@ -75,7 +76,7 @@ public sealed class CheckUser : ApplicationCommandsModule
                 var mod = await ctx.Client.GetUserAsync((ulong)antrag.mod_id);
                 long timestamp = antrag.timestamp;
                 description +=
-                    $"{Helperfunctions.BoolToEmoji(antrag.unbanned)} - ``{antrag.antragsnummer}`` - ``{antrag.grund}`` - {mod.Mention} ({mod.Id}) - <t:{timestamp}:f> (<t:{timestamp}:R>) \n";
+                    $"{BoolToEmoji(antrag.unbanned)} - ``{antrag.antragsnummer}`` - ``{antrag.grund}`` - {mod.Mention} ({mod.Id}) - <t:{timestamp}:f> (<t:{timestamp}:R>) \n";
             }
         }
 

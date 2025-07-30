@@ -47,7 +47,7 @@ public class AntragSperre : ApplicationCommandsModule
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe, ob der User bereits gesperrt ist..."));
 
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         var existingSperre = await context.Antragssperren
             .FirstOrDefaultAsync(a => a.UserId == (long)user.Id);
 

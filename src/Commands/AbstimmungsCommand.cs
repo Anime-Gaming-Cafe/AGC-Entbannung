@@ -23,7 +23,7 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
 
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe, ob bereits eine Abstimmung läuft..."));

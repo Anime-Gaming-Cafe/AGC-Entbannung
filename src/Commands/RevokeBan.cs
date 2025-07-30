@@ -66,7 +66,7 @@ public class RevokeBan : ApplicationCommandsModule
             return;
         }
 
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         var activeVote = await context.Abstimmungen
             .FirstOrDefaultAsync(a => a.ChannelId == (long)channel.Id);
 

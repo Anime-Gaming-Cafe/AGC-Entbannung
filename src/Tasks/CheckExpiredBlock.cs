@@ -18,7 +18,7 @@ public class CheckExpiredBlock
         {
             try
             {
-                using var context = AgcDbContextFactory.CreateDbContext();
+                await using var context = AgcDbContextFactory.CreateDbContext();
                 var currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 
                 var expiredBlocks = await context.Antragssperren

@@ -49,7 +49,7 @@ public static class Helperfunctions
             return;
         }
 
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var messageId = (long)interaction.Message.Id;
         var abstimmung = await context.Abstimmungen.FirstOrDefaultAsync(a => a.MessageId == messageId);
@@ -91,7 +91,7 @@ public static class Helperfunctions
             return;
         }
 
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var messageId = (long)interaction.Message.Id;
         var abstimmung = await context.Abstimmungen.FirstOrDefaultAsync(a => a.MessageId == messageId);
@@ -124,7 +124,7 @@ public static class Helperfunctions
 
     public static async Task<VoteType?> UserHasVoted(ComponentInteractionCreateEventArgs interaction)
     {
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var voteId = ((long)interaction.Channel.Id + (long)interaction.Message.Id).ToString();
         var teamlerVote = await context.AbstimmungenTeamler
@@ -164,14 +164,20 @@ public static class Helperfunctions
         {
             var data = await GetBannsystemReports(user);
 
-            return data.Select(warn => new BannSystemReport
-            {
-                reportId = warn.reportId,
-                authorId = warn.authorId,
-                reason = warn.reason,
-                timestamp = warn.timestamp,
-                active = warn.active
-            }).ToList();
+            if (data != null)
+                return data.Select(warn =>
+                {
+                    if (warn != null)
+                        return new BannSystemReport
+                        {
+                            reportId = warn.reportId,
+                            authorId = warn.authorId,
+                            reason = warn.reason,
+                            timestamp = warn.timestamp,
+                            active = warn.active
+                        };
+                    return null;
+                }).ToList();
         }
         catch (Exception e)
         {
@@ -183,7 +189,7 @@ public static class Helperfunctions
 
     public static async Task<List<AntragshistorieDaten>> GetAntragshistorie(DiscordUser user)
     {
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var antragsverlauf = await context.Antragsverlauf
             .Where(a => a.UserId == (long)user.Id)
@@ -203,7 +209,7 @@ public static class Helperfunctions
     public static async Task RegelPhase1(DiscordUser user)
     {
         var unixTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var existingConfirmation = await context.RequirementConfirmations
             .FirstOrDefaultAsync(r => r.UserId == (long)user.Id);
@@ -228,7 +234,7 @@ public static class Helperfunctions
     public static async Task<bool> RegelPhase2(DiscordInteraction interaction)
     {
         var user_id = interaction.User.Id;
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var confirmation = await context.RequirementConfirmations
             .FirstOrDefaultAsync(r => r.UserId == (long)user_id);
@@ -245,7 +251,7 @@ public static class Helperfunctions
     public static async Task RegelPhase3(DiscordUser user)
     {
         ulong user_id = user.Id;
-        using var context = AgcDbContextFactory.CreateDbContext();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
         var confirmation = await context.RequirementConfirmations
             .FirstOrDefaultAsync(r => r.UserId == (long)user_id);
@@ -295,7 +301,7 @@ public static class Helperfunctions
         }
     }
 
-    public static async Task<bool> CheckVoteThreshold(DiscordClient client,  int totalVotes)
+    private static async Task<bool> CheckVoteThreshold(DiscordClient client,  int totalVotes)
     {
         try
         {
@@ -312,8 +318,8 @@ public static class Helperfunctions
         }
     }
 
-    
-    public static async Task<bool> IsVoteOutcomeDecided(DiscordClient client, int pvotes, int nvotes)
+
+    private static async Task<bool> IsVoteOutcomeDecided(DiscordClient client, int pvotes, int nvotes)
     {
         try
         {
@@ -343,7 +349,7 @@ public static class Helperfunctions
     }
 
 
-    public static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
+    private static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
     {
         try
         {
@@ -351,8 +357,8 @@ public static class Helperfunctions
             bool thresholdReached = await CheckVoteThreshold(client, totalVotes);
             bool isTie = pvotes == nvotes;
             bool outcomeDecided = await IsVoteOutcomeDecided(client, pvotes, nvotes);
-          
-            using var context = AgcDbContextFactory.CreateDbContext();
+
+            await using var context = AgcDbContextFactory.CreateDbContext();
             
             var abstimmung = await context.Abstimmungen
                 .FirstOrDefaultAsync(a => a.MessageId == (long)messageId);
