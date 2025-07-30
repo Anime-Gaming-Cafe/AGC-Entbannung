@@ -10,7 +10,6 @@ using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Npgsql;
 
 #endregion
 

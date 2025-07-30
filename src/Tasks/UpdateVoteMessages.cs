@@ -3,7 +3,7 @@ using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 namespace AGC_Entbannungssystem.Tasks;
 
@@ -15,24 +15,18 @@ public static class UpdateVoteMessages
         {
             try
             {
-                string dbstring = Helperfunctions.DbString();
-                await using var conn = new NpgsqlConnection(dbstring);
-                await conn.OpenAsync();
+                using var context = AgcDbContextFactory.CreateDbContext();
+                var currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                
+                var activeVotes = await context.Abstimmungen
+                    .Where(a => a.ExpiresAt > currentTime)
+                    .Select(a => new { a.ChannelId, a.MessageId, a.ExpiresAt, a.PositiveVotes, a.NegativeVotes })
+                    .ToListAsync();
 
-                await using var cmd =
-                    new NpgsqlCommand("SELECT * FROM abstimmungen WHERE expires_at > @currenttime", conn);
-                cmd.Parameters.AddWithValue("currenttime", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-
-                await using var reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+                foreach (var vote in activeVotes)
                 {
-                    long antragchannelid = reader.GetInt64(0);
-                    ulong messageId = (ulong)reader.GetInt64(1);
-                    long expiresAt = reader.GetInt64(2);
-                    int pvotes = reader.GetInt32(4);
-                    int nvotes = reader.GetInt32(5);
-
-                    await UpdateSingleVoteMessage(client, antragchannelid, messageId, expiresAt, pvotes, nvotes);
+                    await UpdateSingleVoteMessage(client, vote.ChannelId, (ulong)vote.MessageId, 
+                        vote.ExpiresAt, vote.PositiveVotes, vote.NegativeVotes);
                 }
             }
             catch (Exception ex)
@@ -82,23 +76,16 @@ public static class UpdateVoteMessages
     {
         try
         {
-            string dbstring = Helperfunctions.DbString();
-            await using var conn = new NpgsqlConnection(dbstring);
-            await conn.OpenAsync();
-            await using var cmd = new NpgsqlCommand("SELECT * FROM abstimmungen WHERE message_id = @msgid", conn);
-            cmd.Parameters.AddWithValue("msgid", (long)messageId);
+            using var context = AgcDbContextFactory.CreateDbContext();
+            var vote = await context.Abstimmungen
+                .FirstOrDefaultAsync(a => a.MessageId == (long)messageId);
 
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            if (vote != null)
             {
-                long antragchannelid = reader.GetInt64(0);
-                long expiresAt = reader.GetInt64(2);
-                int pvotes = reader.GetInt32(4);
-                int nvotes = reader.GetInt32(5);
-                Console.WriteLine($"{antragchannelid}: {messageId}");
+                Console.WriteLine($"{vote.ChannelId}: {messageId}");
                 Console.WriteLine(
-                    $"Updating vote message {messageId} in channel {antragchannelid} with expires at {expiresAt}, pvotes: {pvotes}, nvotes: {nvotes}");
-                await UpdateSingleVoteMessage(client, antragchannelid, messageId, expiresAt, pvotes, nvotes);
+                    $"Updating vote message {messageId} in channel {vote.ChannelId} with expires at {vote.ExpiresAt}, pvotes: {vote.PositiveVotes}, nvotes: {vote.NegativeVotes}");
+                await UpdateSingleVoteMessage(client, vote.ChannelId, messageId, vote.ExpiresAt, vote.PositiveVotes, vote.NegativeVotes);
             }
         }
         catch (Exception ex)
