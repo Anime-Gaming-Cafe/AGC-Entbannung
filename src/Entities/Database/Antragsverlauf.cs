@@ -13,14 +13,14 @@ public class Antragsverlauf
     [Column("user_id")]
     public long UserId { get; set; }
 
-    [Column("antragsnummer")]
-    public string Antragsnummer { get; set; } = string.Empty;
+    [Column("antrags_id")]
+    public string AntragsId { get; set; } = string.Empty;
 
-    [Column("unbanned")]
-    public bool Unbanned { get; set; }
+    [Column("entbannt")]
+    public bool Entbannt { get; set; }
 
-    [Column("grund")]
-    public string Grund { get; set; } = string.Empty;
+    [Column("reason")]
+    public string Reason { get; set; } = string.Empty;
 
     [Column("mod_id")]
     public long ModId { get; set; }

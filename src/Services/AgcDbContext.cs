@@ -12,6 +12,8 @@ public class AgcDbContext : DbContext
     public DbSet<Antragssperre> Antragssperren { get; set; }
     public DbSet<RequirementConfirmation> RequirementConfirmations { get; set; }
     public DbSet<Flag> Flags { get; set; }
+    public DbSet<PermaBlock> PermaBlocks { get; set; }
+    public DbSet<Autocompletion> Autocompletions { get; set; }
 
     public AgcDbContext(DbContextOptions<AgcDbContext> options) : base(options)
     {
@@ -58,6 +60,20 @@ public class AgcDbContext : DbContext
 
         // Configure Flag
         modelBuilder.Entity<Flag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+        });
+
+        // Configure PermaBlock
+        modelBuilder.Entity<PermaBlock>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+        });
+
+        // Configure Autocompletion
+        modelBuilder.Entity<Autocompletion>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
