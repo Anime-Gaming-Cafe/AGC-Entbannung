@@ -7,9 +7,6 @@ namespace AGC_Entbannungssystem.Entities.Database;
 public class Antragssperre
 {
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
-
     [Column("user_id")]
     public long UserId { get; set; }
 

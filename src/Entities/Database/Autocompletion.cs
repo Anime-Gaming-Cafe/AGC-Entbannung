@@ -7,12 +7,10 @@ namespace AGC_Entbannungssystem.Entities.Database;
 public class Autocompletion
 {
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
-
     [Column("type")]
     public string Type { get; set; } = string.Empty;
 
+    [Key]
     [Column("data")]
     public string Data { get; set; } = string.Empty;
 }

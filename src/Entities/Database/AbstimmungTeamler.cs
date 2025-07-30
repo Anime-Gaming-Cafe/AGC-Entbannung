@@ -7,14 +7,12 @@ namespace AGC_Entbannungssystem.Entities.Database;
 public class AbstimmungTeamler
 {
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
-
-    [Column("vote_id")]
-    public string VoteId { get; set; } = string.Empty;
-
     [Column("user_id")]
     public long UserId { get; set; }
+
+    [Key]
+    [Column("vote_id")]
+    public string VoteId { get; set; } = string.Empty;
 
     [Column("votevalue")]
     public int VoteValue { get; set; }

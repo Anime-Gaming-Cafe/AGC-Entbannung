@@ -7,11 +7,12 @@ namespace AGC_Entbannungssystem.Entities.Database;
 public class Flag
 {
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
-
     [Column("userid")]
     public long UserId { get; set; }
+
+    [Key]
+    [Column("caseid")]
+    public string CaseId { get; set; } = string.Empty;
 
     [Column("punisherid")]
     public long PunisherId { get; set; }
@@ -21,7 +22,4 @@ public class Flag
 
     [Column("description")]
     public string Description { get; set; } = string.Empty;
-
-    [Column("caseid")]
-    public string CaseId { get; set; } = string.Empty;
 }

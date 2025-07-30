@@ -7,12 +7,10 @@ namespace AGC_Entbannungssystem.Entities.Database;
 public class Antragsverlauf
 {
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
-
     [Column("user_id")]
     public long UserId { get; set; }
 
+    [Key] 
     [Column("antrags_id")]
     public string AntragsId { get; set; } = string.Empty;
 

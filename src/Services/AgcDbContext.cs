@@ -23,60 +23,56 @@ public class AgcDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure Abstimmung
+        // Configure Abstimmung - channel_id is the primary key
         modelBuilder.Entity<Abstimmung>(entity =>
         {
             entity.HasKey(e => e.ChannelId);
             entity.Property(e => e.ChannelId).ValueGeneratedNever();
         });
 
-        // Configure AbstimmungTeamler
+        // Configure AbstimmungTeamler - composite key of user_id and vote_id
         modelBuilder.Entity<AbstimmungTeamler>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => new { e.UserId, e.VoteId });
         });
 
-        // Configure Antragsverlauf
+        // Configure Antragsverlauf - composite key of user_id and antrags_id
         modelBuilder.Entity<Antragsverlauf>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => new { e.UserId, e.AntragsId });
         });
 
-        // Configure Antragssperre
+        // Configure Antragssperre - user_id is the primary key
         modelBuilder.Entity<Antragssperre>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => e.UserId);
+            entity.Property(e => e.UserId).ValueGeneratedNever();
         });
 
-        // Configure RequirementConfirmation
+        // Configure RequirementConfirmation - user_id is the primary key
         modelBuilder.Entity<RequirementConfirmation>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => e.UserId);
+            entity.Property(e => e.UserId).ValueGeneratedNever();
         });
 
-        // Configure Flag
+        // Configure Flag - composite key of userid and caseid
         modelBuilder.Entity<Flag>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => new { e.UserId, e.CaseId });
         });
 
-        // Configure PermaBlock
+        // Configure PermaBlock - userid is the primary key
         modelBuilder.Entity<PermaBlock>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => e.UserId);
+            entity.Property(e => e.UserId).ValueGeneratedNever();
         });
 
-        // Configure Autocompletion
+        // Configure Autocompletion - composite key of type and data
         modelBuilder.Entity<Autocompletion>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasKey(e => new { e.Type, e.Data });
         });
     }
 }

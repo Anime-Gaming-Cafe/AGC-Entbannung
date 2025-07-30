@@ -7,9 +7,6 @@ namespace AGC_Entbannungssystem.Entities.Database;
 public class PermaBlock
 {
     [Key]
-    [Column("id")]
-    public int Id { get; set; }
-
     [Column("userid")]
     public long UserId { get; set; }
 }
