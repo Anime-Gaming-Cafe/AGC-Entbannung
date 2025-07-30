@@ -1,6 +1,7 @@
 ﻿#region
 
 using AGC_Entbannungssystem.AutocompletionProviders;
+using AGC_Entbannungssystem.Entities.Database;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
@@ -11,7 +12,7 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.Exceptions;
 using DisCatSharp.Interactivity.Extensions;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
@@ -65,21 +66,17 @@ public class RevokeBan : ApplicationCommandsModule
             return;
         }
 
-        var dbstring = Helperfunctions.DbString();
-        await using var conn = new NpgsqlConnection(dbstring);
-        await conn.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM abstimmungen WHERE channel_id = @channelid", conn);
-        cmd.Parameters.AddWithValue("channelid", (long)channel.Id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (reader.HasRows)
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        var activeVote = await context.Abstimmungen
+            .FirstOrDefaultAsync(a => a.ChannelId == (long)channel.Id);
+
+        if (activeVote != null)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent(
                     $"Der Antrag mit der Antragsnummer ``{antragsnummer}`` ist noch in Abstimmung. Bitte warte bis die Abstimmung beendet ist."));
             return;
         }
-
-        await conn.CloseAsync();
 
         var caseid = Helperfunctions.GenerateCaseId();
         var confirmEmbedBuilder = new DiscordEmbedBuilder()
@@ -140,20 +137,17 @@ public class RevokeBan : ApplicationCommandsModule
             await mainGuild.UnbanMemberAsync(user.Id, reason);
             var flagstring = $"Durch Antrag entbannt. \nUrsprünglicher Banngrund: ``{banreason}`` \n" +
                              $"__Details:__\n Entbanngrund: ``{reason}``\n Antrags-ID: ``{antragsnummer}``\n Entbannungszeitpunkt: {DateTimeOffset.Now.Timestamp()}\n Entbannung ausgeführt von: ``{ctx.User.UsernameWithDiscriminator}`` ({ctx.User.Id})";
-            await using var dbConnection =
-                new NpgsqlConnection(Helperfunctions.DbString());
-            await dbConnection.OpenAsync();
-            await using var dbCommand =
-                new NpgsqlCommand(
-                    "INSERT INTO flags (userid, punisherid, datum, description, caseid) VALUES (@userid, @botid, @timestamp, @banreason, @caseid)",
-                    dbConnection);
-            dbCommand.Parameters.AddWithValue("userid", (long)user.Id);
-            dbCommand.Parameters.AddWithValue("botid", (long)ctx.Client.CurrentUser.Id);
-            dbCommand.Parameters.AddWithValue("timestamp", DateTimeOffset.Now.ToUnixTimeSeconds());
-            dbCommand.Parameters.AddWithValue("banreason", flagstring);
-            dbCommand.Parameters.AddWithValue("caseid", caseid);
-            await dbCommand.ExecuteNonQueryAsync();
-            await dbConnection.CloseAsync();
+            
+            var flag = new Flag
+            {
+                UserId = (long)user.Id,
+                PunisherId = (long)ctx.Client.CurrentUser.Id,
+                Datum = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                Description = flagstring,
+                CaseId = caseid
+            };
+            context.Flags.Add(flag);
+            await context.SaveChangesAsync();
             var successEmbedBuilder = new DiscordEmbedBuilder()
                 .WithTitle("Entbannung erfolgreich")
                 .WithFooter(ctx.User.UsernameWithDiscriminator, ctx.User.AvatarUrl)

@@ -1,5 +1,6 @@
 ﻿#region
 
+using AGC_Entbannungssystem.Entities.Database;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp.ApplicationCommands;
@@ -7,7 +8,7 @@ using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
@@ -21,22 +22,21 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
-        var constring = Helperfunctions.DbString();
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM abstimmungen WHERE channel_id = @channelid", con);
-        cmd.Parameters.AddWithValue("channelid", (long)ctx.Channel.Id);
+
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe, ob bereits eine Abstimmung läuft..."));
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (reader.HasRows)
+        
+        var existingVote = await context.Abstimmungen
+            .FirstOrDefaultAsync(a => a.ChannelId == (long)ctx.Channel.Id);
+
+        if (existingVote != null)
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent("Es läuft bereits eine Abstimmung in diesem Channel!"));
             return;
         }
-
-        await con.CloseAsync();
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Keine Abstimmung gefunden. Erstelle eine neue Abstimmung..."));
@@ -94,20 +94,17 @@ public sealed class AbstimmungsCommand : ApplicationCommandsModule
         notifyembed.WithFooter("AGC Entbannungssystem");
         await ctx.Channel.SendMessageAsync(notifyembed);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Abstimmung erstellt!"));
-        var constring2 = Helperfunctions.DbString();
-        await using var con2 = new NpgsqlConnection(constring2);
-        await con2.OpenAsync();
-        await using var cmd2 =
-            new NpgsqlCommand(
-                "INSERT INTO abstimmungen (channel_id, message_id, expires_at, created_by, pvotes, nvotes) VALUES (@channelid, @messageid, @endtime, @createdby, @pvotes, @nvotes)",
-                con2);
-        cmd2.Parameters.AddWithValue("channelid", (long)ctx.Channel.Id);
-        cmd2.Parameters.AddWithValue("messageid", (long)votemessage.Id);
-        cmd2.Parameters.AddWithValue("endtime", now16h);
-        cmd2.Parameters.AddWithValue("createdby", (long)ctx.User.Id);
-        cmd2.Parameters.AddWithValue("pvotes", 0);
-        cmd2.Parameters.AddWithValue("nvotes", 0);
-        await cmd2.ExecuteNonQueryAsync();
-        await con2.CloseAsync();
+        
+        var abstimmung = new Abstimmung
+        {
+            ChannelId = (long)ctx.Channel.Id,
+            MessageId = (long)votemessage.Id,
+            ExpiresAt = now16h,
+            PositiveVotes = 0,
+            NegativeVotes = 0,
+            EndPending = false
+        };
+        context.Abstimmungen.Add(abstimmung);
+        await context.SaveChangesAsync();
     }
 }

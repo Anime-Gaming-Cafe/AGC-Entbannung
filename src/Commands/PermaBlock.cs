@@ -1,14 +1,12 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿using AGC_Entbannungssystem.Services;
 using DisCatSharp.ApplicationCommands;
 using DisCatSharp.ApplicationCommands.Attributes;
 using DisCatSharp.ApplicationCommands.Context;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 namespace AGC_Entbannungssystem.Commands;
-
-
 
 public sealed class PermaBlockUserCommand : ApplicationCommandsModule
 {
@@ -32,26 +30,25 @@ public sealed class PermaBlockUserCommand : ApplicationCommandsModule
         }
     }
 
-
     private static async Task<bool> BlockUserIfNotBlocked(DiscordUser user)
     {
-        var constring = Helperfunctions.DbString();
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd1 = new NpgsqlCommand("SELECT * FROM permas WHERE userid = @user_id", con);
-        cmd1.Parameters.AddWithValue("user_id", (long)user.Id);
-        await using var reader = await cmd1.ExecuteReaderAsync();
-        if (reader.HasRows)
+        await using var context = AgcDbContextFactory.CreateDbContext();
+
+        var existingBlock = await context.PermaBlocks
+            .FirstOrDefaultAsync(p => p.UserId == (long)user.Id);
+
+        if (existingBlock != null)
         {
             return false;
         }
 
+        var permaBlock = new Entities.Database.PermaBlock
+        {
+            UserId = (long)user.Id
+        };
 
-        await using var con1 = new NpgsqlConnection(constring);
-        await con1.OpenAsync();
-        await using var cmd = new NpgsqlCommand("INSERT INTO permas (userid) VALUES (@user_id)", con1);
-        cmd.Parameters.AddWithValue("user_id", (long)user.Id);
-        await cmd.ExecuteNonQueryAsync();
+        context.PermaBlocks.Add(permaBlock);
+        await context.SaveChangesAsync();
         return true;
     }
 }

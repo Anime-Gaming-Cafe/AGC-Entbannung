@@ -1,6 +1,7 @@
 #region
 
 using AGC_Entbannungssystem.Entities;
+using AGC_Entbannungssystem.Entities.Database;
 using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using AGC_Entbannungssystem.Tasks;
@@ -10,8 +11,8 @@ using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using DisCatSharp.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 #endregion
 
@@ -226,12 +227,12 @@ public class onComponentInteraction : ApplicationCommandsModule
                 await e.Interaction.EditOriginalResponseAsync(
                     new DiscordWebhookBuilder().WithContent("Prüfe, ob du für Anträge gesperrt bist..."));
                 await Task.Delay(500);
-                await using var con = new NpgsqlConnection(cons);
-                await con.OpenAsync();
-                await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
-                cmd.Parameters.AddWithValue("userid", (long)e.User.Id);
-                await using var reader = await cmd.ExecuteReaderAsync();
-                if (reader.HasRows)
+
+                await using var context = AgcDbContextFactory.CreateDbContext();
+                var sperre = await context.Antragssperren
+                    .FirstOrDefaultAsync(s => s.UserId == (long)e.User.Id);
+
+                if (sperre != null)
                 {
                     await e.Interaction.EditOriginalResponseAsync(
                         new DiscordWebhookBuilder().WithContent("Du bist für Anträge gesperrt!"));
@@ -422,20 +423,16 @@ public class onComponentInteraction : ApplicationCommandsModule
                 await logChannel.SendMessageAsync(
                     $"{e.User.Mention} ({e.User.Id}) hat die Sperrzeit **abgefragt** - {DateTime.Now.Timestamp(TimestampFormat.ShortDateTime)}");
 
-                var cons = Helperfunctions.DbString();
+                await using var context2 = AgcDbContextFactory.CreateDbContext();
+                
+                var sperrInfo = await context2.Antragssperren
+                    .FirstOrDefaultAsync(s => s.UserId == (long)e.User.Id);
+
                 try
                 {
-                    await using var con = new NpgsqlConnection(cons);
-                    await con.OpenAsync();
-
-                    await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
-                    cmd.Parameters.AddWithValue("userid", (long)e.User.Id);
-
-                    await using var reader = await cmd.ExecuteReaderAsync();
-
-                    if (await reader.ReadAsync())
+                    if (sperrInfo != null)
                     {
-                        var expiresAt = reader.GetInt64(1);
+                        var expiresAt = sperrInfo.ExpiresAt;
                         var unixNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                         var secondsLeft = expiresAt - unixNow;
                         var humanTime = TimeSpan.FromSeconds(secondsLeft);
@@ -467,28 +464,28 @@ public class onComponentInteraction : ApplicationCommandsModule
 
     private static async Task<bool> GetPermaBlock(ulong userid)
     {
-        await using var con = new NpgsqlConnection(Helperfunctions.DbString());
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM permas WHERE userid = @userid", con);
-        cmd.Parameters.AddWithValue("userid", (long)userid);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        return reader.HasRows;
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        return await context.PermaBlocks
+            .AnyAsync(p => p.UserId == (long)userid);
     }
 
 
     private static async Task Sperre(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
     {
         var timestamp = DateTimeOffset.UtcNow.AddMonths(3).ToUnixTimeSeconds();
-        await using var con2 = new NpgsqlConnection(Helperfunctions.DbString());
-        await con2.OpenAsync();
-        await using var cmd2 =
-            new NpgsqlCommand(
-                "INSERT INTO antragssperre (user_id, reason, expires_at) VALUES (@userid, @reason, @timestamp)", con2);
-        cmd2.Parameters.AddWithValue("userid", (long)user.Id);
-        cmd2.Parameters.AddWithValue("reason", reason);
-        cmd2.Parameters.AddWithValue("timestamp", timestamp);
-        await cmd2.ExecuteNonQueryAsync();
-        await con2.CloseAsync();
+        
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var sperre = new Antragssperre
+        {
+            UserId = (long)user.Id,
+            Reason = reason,
+            ExpiresAt = timestamp
+        };
+
+        context.Antragssperren.Add(sperre);
+        await context.SaveChangesAsync();
+
         try
         {
             // try to give role
@@ -515,18 +512,20 @@ public class onComponentInteraction : ApplicationCommandsModule
 
     private static async Task AblehnungEintragen(DiscordUser user, string reason, ComponentInteractionCreateEventArgs e)
     {
-        await using var con2 = new NpgsqlConnection(Helperfunctions.DbString());
-        await con2.OpenAsync();
-        await using var cmd2 = new NpgsqlCommand(
-            "INSERT INTO antragsverlauf (antrags_id, user_id, mod_id, timestamp, entbannt, reason) VALUES (@antragsnummer, @userid, @modid, @timestamp, @isunbanned, @grund)",
-            con2);
-        cmd2.Parameters.AddWithValue("antragsnummer", "STUB0000");
-        cmd2.Parameters.AddWithValue("userid", (long)user.Id);
-        cmd2.Parameters.AddWithValue("modid", (long)CurrentApplicationData.Client.CurrentUser.Id);
-        cmd2.Parameters.AddWithValue("timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-        cmd2.Parameters.AddWithValue("isunbanned", false);
-        cmd2.Parameters.AddWithValue("grund", reason);
-        await cmd2.ExecuteNonQueryAsync();
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var antragsverlauf = new Antragsverlauf
+        {
+            AntragsId = "STUB0000",
+            UserId = (long)user.Id,
+            ModId = (long)CurrentApplicationData.Client.CurrentUser.Id,
+            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Entbannt = false,
+            Reason = reason
+        };
+
+        context.Antragsverlauf.Add(antragsverlauf);
+        await context.SaveChangesAsync();
 
         var eb = new DiscordEmbedBuilder();
         eb.WithTitle("Antrag wurde abgelehnt!");

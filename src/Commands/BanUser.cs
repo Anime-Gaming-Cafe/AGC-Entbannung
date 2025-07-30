@@ -108,7 +108,6 @@ public sealed class BanUserCommand : ApplicationCommandsModule
                 sent = false;
             }
 
-            var semoji = sent ? "<:yes:861266772665040917>" : "<:no:861266772724023296>";
             try
             {
                 await ctx.Guild.BanMemberAsync(user.Id, 0, ReasonString);

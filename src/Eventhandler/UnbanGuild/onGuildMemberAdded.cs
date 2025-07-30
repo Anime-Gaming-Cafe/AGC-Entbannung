@@ -7,7 +7,7 @@ using DisCatSharp.ApplicationCommands;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 #endregion
 
@@ -21,13 +21,12 @@ public class onGuildMemberAdded : ApplicationCommandsModule
     {
         _ = Task.Run(async () =>
         {
-            var cons = Helperfunctions.DbString();
-            await using var con = new NpgsqlConnection(cons);
-            await con.OpenAsync();
-            await using var cmd = new NpgsqlCommand("SELECT * FROM antragssperre WHERE user_id = @userid", con);
-            cmd.Parameters.AddWithValue("userid", (long)e.Member.Id);
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if (reader.HasRows)
+            await using var context = AgcDbContextFactory.CreateDbContext();
+
+            var sperre = await context.Antragssperren
+                .FirstOrDefaultAsync(s => s.UserId == (long)e.Member.Id);
+
+            if (sperre != null)
             {
                 try
                 {
@@ -40,10 +39,7 @@ public class onGuildMemberAdded : ApplicationCommandsModule
                     await ErrorReporting.SendErrorToDev(client, e.Member, exception);
                 }
             }
-
-            await con.CloseAsync();
         });
-
 
         await Task.CompletedTask;
     }

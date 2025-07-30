@@ -1,14 +1,15 @@
 ﻿#region
 
 using AGC_Entbannungssystem.Entities;
+using AGC_Entbannungssystem.Entities.Database;
 using AGC_Entbannungssystem.Enums;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Npgsql;
 
 #endregion
 
@@ -48,36 +49,32 @@ public static class Helperfunctions
             return;
         }
 
-        var dbstring = DbString();
-        await using var conn = new NpgsqlConnection(dbstring);
-        await conn.OpenAsync();
-
-        var column = positiveVote ? "pvotes" : "nvotes";
-        await using var cmd =
-            new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} + 1 WHERE message_id = @messageid", conn);
-        cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
-        await cmd.ExecuteNonQueryAsync();
-
-        await using var cmd2 =
-            new NpgsqlCommand(
-                "INSERT INTO abstimmungen_teamler (vote_id, user_id, votevalue) VALUES (@voteid, @userid, @votevalue)",
-                conn);
-        cmd2.Parameters.AddWithValue("voteid", (interaction.Channel.Id + interaction.Message.Id).ToString());
-        cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
-        cmd2.Parameters.AddWithValue("votevalue", positiveVote ? 1 : 0);
-        await cmd2.ExecuteNonQueryAsync();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
-        await using var cmd3 = new NpgsqlCommand("SELECT pvotes, nvotes FROM abstimmungen WHERE message_id = @messageid", conn);
-        cmd3.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
-        await using var reader = await cmd3.ExecuteReaderAsync();
+        var messageId = (long)interaction.Message.Id;
+        var abstimmung = await context.Abstimmungen.FirstOrDefaultAsync(a => a.MessageId == messageId);
         
-        if (await reader.ReadAsync())
+        if (abstimmung != null)
         {
-            int pvotes = reader.GetInt32(0);
-            int nvotes = reader.GetInt32(1);
+            // Update vote count
+            if (positiveVote)
+                abstimmung.PositiveVotes++;
+            else
+                abstimmung.NegativeVotes++;
+
+            // Add team member vote
+            var teamlerVote = new AbstimmungTeamler
+            {
+                VoteId = (interaction.Channel.Id + interaction.Message.Id).ToString(),
+                UserId = (long)interaction.User.Id,
+                VoteValue = positiveVote ? 1 : 0
+            };
+            context.AbstimmungenTeamler.Add(teamlerVote);
+
+            await context.SaveChangesAsync();
             
-            await reader.CloseAsync();
-            await UpdateEndPendingStatus(CurrentApplicationData.Client, interaction.Message.Id, pvotes, nvotes);
+            await UpdateEndPendingStatus(CurrentApplicationData.Client, interaction.Message.Id, 
+                abstimmung.PositiveVotes, abstimmung.NegativeVotes);
         }
     }
 
@@ -94,55 +91,48 @@ public static class Helperfunctions
             return;
         }
 
-        var dbstring = DbString();
-        await using var conn = new NpgsqlConnection(dbstring);
-        await conn.OpenAsync();
-
-        var column = existingVote == VoteType.Positive ? "pvotes" : "nvotes";
-        await using var cmd =
-            new NpgsqlCommand($"UPDATE abstimmungen SET {column} = {column} - 1 WHERE message_id = @messageid", conn);
-        cmd.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
-        await cmd.ExecuteNonQueryAsync();
-
-        await using var cmd2 =
-            new NpgsqlCommand("DELETE FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
-        var voteId = (long)interaction.Channel.Id + (long)interaction.Message.Id;
-        cmd2.Parameters.AddWithValue("voteid", voteId.ToString());
-        cmd2.Parameters.AddWithValue("userid", (long)interaction.User.Id);
-        await cmd2.ExecuteNonQueryAsync();
+        await using var context = AgcDbContextFactory.CreateDbContext();
         
-        await using var cmd3 = new NpgsqlCommand("SELECT pvotes, nvotes FROM abstimmungen WHERE message_id = @messageid", conn);
-        cmd3.Parameters.AddWithValue("messageid", (long)interaction.Message.Id);
-        await using var reader = await cmd3.ExecuteReaderAsync();
+        var messageId = (long)interaction.Message.Id;
+        var abstimmung = await context.Abstimmungen.FirstOrDefaultAsync(a => a.MessageId == messageId);
         
-        if (await reader.ReadAsync())
+        if (abstimmung != null)
         {
-            int pvotes = reader.GetInt32(0);
-            int nvotes = reader.GetInt32(1);
+            // Update vote count
+            if (existingVote == VoteType.Positive)
+                abstimmung.PositiveVotes--;
+            else
+                abstimmung.NegativeVotes--;
+
+            // Remove team member vote
+            var voteId = ((long)interaction.Channel.Id + (long)interaction.Message.Id).ToString();
+            var teamlerVote = await context.AbstimmungenTeamler
+                .FirstOrDefaultAsync(t => t.VoteId == voteId && t.UserId == (long)interaction.User.Id);
             
-            await reader.CloseAsync();
-            await UpdateEndPendingStatus(CurrentApplicationData.Client, interaction.Message.Id, pvotes, nvotes);
+            if (teamlerVote != null)
+            {
+                context.AbstimmungenTeamler.Remove(teamlerVote);
+            }
+
+            await context.SaveChangesAsync();
+            
+            await UpdateEndPendingStatus(CurrentApplicationData.Client, interaction.Message.Id, 
+                abstimmung.PositiveVotes, abstimmung.NegativeVotes);
         }
     }
 
 
     public static async Task<VoteType?> UserHasVoted(ComponentInteractionCreateEventArgs interaction)
     {
-        var dbstring = DbString();
-        await using var conn = new NpgsqlConnection(dbstring);
-        await conn.OpenAsync();
-        await using var cmd =
-            new NpgsqlCommand(
-                "SELECT votevalue FROM abstimmungen_teamler WHERE vote_id = @voteid AND user_id = @userid", conn);
-        var voteId = (long)interaction.Channel.Id + (long)interaction.Message.Id;
-        cmd.Parameters.AddWithValue("voteid", voteId.ToString());
-        cmd.Parameters.AddWithValue("userid", (long)interaction.User.Id);
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var voteId = ((long)interaction.Channel.Id + (long)interaction.Message.Id).ToString();
+        var teamlerVote = await context.AbstimmungenTeamler
+            .FirstOrDefaultAsync(t => t.VoteId == voteId && t.UserId == (long)interaction.User.Id);
 
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
+        if (teamlerVote != null)
         {
-            var value = reader.GetInt32(0);
-            return value == 1 ? VoteType.Positive : VoteType.Negative;
+            return teamlerVote.VoteValue == 1 ? VoteType.Positive : VoteType.Negative;
         }
 
         return null;
@@ -174,14 +164,20 @@ public static class Helperfunctions
         {
             var data = await GetBannsystemReports(user);
 
-            return data.Select(warn => new BannSystemReport
-            {
-                reportId = warn.reportId,
-                authorId = warn.authorId,
-                reason = warn.reason,
-                timestamp = warn.timestamp,
-                active = warn.active
-            }).ToList();
+            if (data != null)
+                return data.Select(warn =>
+                {
+                    if (warn != null)
+                        return new BannSystemReport
+                        {
+                            reportId = warn.reportId,
+                            authorId = warn.authorId,
+                            reason = warn.reason,
+                            timestamp = warn.timestamp,
+                            active = warn.active
+                        };
+                    return null;
+                }).ToList();
         }
         catch (Exception e)
         {
@@ -193,87 +189,60 @@ public static class Helperfunctions
 
     public static async Task<List<AntragshistorieDaten>> GetAntragshistorie(DiscordUser user)
     {
-        var constring = DbString();
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("SELECT * FROM antragsverlauf WHERE user_id = @userid", con);
-        cmd.Parameters.AddWithValue("userid", (long)user.Id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        var data = new List<AntragshistorieDaten>();
-        while (await reader.ReadAsync())
-        {
-            data.Add(new AntragshistorieDaten
-            {
-                user_id = reader.GetInt64(0),
-                antragsnummer = reader.GetString(1),
-                unbanned = reader.GetBoolean(2),
-                grund = reader.GetString(3),
-                mod_id = reader.GetInt64(4),
-                timestamp = reader.GetInt64(5)
-            });
-        }
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var antragsverlauf = await context.Antragsverlauf
+            .Where(a => a.UserId == (long)user.Id)
+            .ToListAsync();
 
-        return data;
+        return antragsverlauf.Select(a => new AntragshistorieDaten
+        {
+            user_id = a.UserId,
+            antragsnummer = a.AntragsId,
+            unbanned = a.Entbannt,
+            grund = a.Reason,
+            mod_id = a.ModId,
+            timestamp = a.Timestamp
+        }).ToList();
     }
 
     public static async Task RegelPhase1(DiscordUser user)
     {
         var unixTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
-        var constring = DbString();
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        // look in table if user is already in there
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var existingConfirmation = await context.RequirementConfirmations
+            .FirstOrDefaultAsync(r => r.UserId == (long)user.Id);
 
-        // schema user_id bigint, time bigint
-        await using var cmd = new NpgsqlCommand("SELECT * FROM requirementconfirmation WHERE user_id = @userid", con);
-        cmd.Parameters.AddWithValue("userid", (long)user.Id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        // if user is in there, update, else insert
-
-
-        if (reader.HasRows)
+        if (existingConfirmation != null)
         {
-            await reader.ReadAsync();
-            await reader.CloseAsync();
-            await using var cmd2 =
-                new NpgsqlCommand("UPDATE requirementconfirmation SET time = @time WHERE user_id = @userid", con);
-            cmd2.Parameters.AddWithValue("userid", (long)user.Id);
-            cmd2.Parameters.AddWithValue("time", unixTimestamp);
-            await cmd2.ExecuteNonQueryAsync();
+            existingConfirmation.Time = unixTimestamp;
         }
         else
         {
-            await reader.CloseAsync();
-            await using var cmd2 =
-                new NpgsqlCommand("INSERT INTO requirementconfirmation (user_id, time) VALUES (@userid, @time)", con);
-            cmd2.Parameters.AddWithValue("userid", (long)user.Id);
-            cmd2.Parameters.AddWithValue("time", unixTimestamp);
-            await cmd2.ExecuteNonQueryAsync();
+            var newConfirmation = new RequirementConfirmation
+            {
+                UserId = (long)user.Id,
+                Time = unixTimestamp
+            };
+            context.RequirementConfirmations.Add(newConfirmation);
         }
+
+        await context.SaveChangesAsync();
     }
 
     public static async Task<bool> RegelPhase2(DiscordInteraction interaction)
     {
         var user_id = interaction.User.Id;
-        var constring = DbString();
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        bool ready = false;
-        // look for timestamp and if 5 minutes have passed
-        await using var cmd = new NpgsqlCommand("SELECT * FROM requirementconfirmation WHERE user_id = @userid", con);
-        cmd.Parameters.AddWithValue("userid", (long)user_id);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        if (reader.HasRows)
-        {
-            await reader.ReadAsync();
-            var timestamp = reader.GetInt64(1);
-            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
-            if (now - timestamp >= 180)
-            {
-                ready = true;
-            }
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var confirmation = await context.RequirementConfirmations
+            .FirstOrDefaultAsync(r => r.UserId == (long)user_id);
 
-            return ready;
+        if (confirmation != null)
+        {
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            return now - confirmation.Time >= 180;
         }
 
         return true;
@@ -282,12 +251,16 @@ public static class Helperfunctions
     public static async Task RegelPhase3(DiscordUser user)
     {
         ulong user_id = user.Id;
-        var constring = DbString();
-        await using var con = new NpgsqlConnection(constring);
-        await con.OpenAsync();
-        await using var cmd = new NpgsqlCommand("DELETE FROM requirementconfirmation WHERE user_id = @userid", con);
-        cmd.Parameters.AddWithValue("userid", (long)user_id);
-        await cmd.ExecuteNonQueryAsync();
+        await using var context = AgcDbContextFactory.CreateDbContext();
+        
+        var confirmation = await context.RequirementConfirmations
+            .FirstOrDefaultAsync(r => r.UserId == (long)user_id);
+
+        if (confirmation != null)
+        {
+            context.RequirementConfirmations.Remove(confirmation);
+            await context.SaveChangesAsync();
+        }
     }
 
     public static string BoolToEmoji(bool value)
@@ -328,7 +301,7 @@ public static class Helperfunctions
         }
     }
 
-    public static async Task<bool> CheckVoteThreshold(DiscordClient client,  int totalVotes)
+    private static async Task<bool> CheckVoteThreshold(DiscordClient client,  int totalVotes)
     {
         try
         {
@@ -345,8 +318,8 @@ public static class Helperfunctions
         }
     }
 
-    
-    public static async Task<bool> IsVoteOutcomeDecided(DiscordClient client, int pvotes, int nvotes)
+
+    private static async Task<bool> IsVoteOutcomeDecided(DiscordClient client, int pvotes, int nvotes)
     {
         try
         {
@@ -376,32 +349,25 @@ public static class Helperfunctions
     }
 
 
-    public static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
+    private static async Task UpdateEndPendingStatus(DiscordClient client, ulong messageId, int pvotes, int nvotes)
     {
         try
         {
             int totalVotes = pvotes + nvotes;
             bool thresholdReached = await CheckVoteThreshold(client, totalVotes);
             bool isTie = pvotes == nvotes;
-
             bool outcomeDecided = await IsVoteOutcomeDecided(client, pvotes, nvotes);
-          
-            var dbstring = DbString();
-            await using var conn = new NpgsqlConnection(dbstring);
-            await conn.OpenAsync();
+
+            await using var context = AgcDbContextFactory.CreateDbContext();
             
-            // Never end a vote if there's a tie
-            if (!isTie && ((thresholdReached) || outcomeDecided))
+            var abstimmung = await context.Abstimmungen
+                .FirstOrDefaultAsync(a => a.MessageId == (long)messageId);
+            
+            if (abstimmung != null)
             {
-                await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = true WHERE message_id = @messageid", conn);
-                cmd.Parameters.AddWithValue("messageid", (long)messageId);
-                await cmd.ExecuteNonQueryAsync();
-            }
-            else
-            {
-                await using var cmd = new NpgsqlCommand("UPDATE abstimmungen SET endpending = false WHERE message_id = @messageid", conn);
-                cmd.Parameters.AddWithValue("messageid", (long)messageId);
-                await cmd.ExecuteNonQueryAsync();
+                // Never end a vote if there's a tie
+                abstimmung.EndPending = !isTie && ((thresholdReached) || outcomeDecided);
+                await context.SaveChangesAsync();
             }
         }
         catch (Exception)
