@@ -3,29 +3,39 @@
     "config:recommended"
   ],
   "automerge": false,
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "dependencyDashboard": true,
   "packageRules": [
     {
-      "matchManagers": ["nuget"],
+      "matchManagers": [
+        "nuget"
+      ],
       "enabled": true,
       "automerge": true,
       "automergeType": "pr"
     },
     {
       "groupName": "DisCatSharp packages",
-      "matchPackagePatterns": ["^DisCatSharp"],
-      "groupSlug": "discatsharp"
+      "groupSlug": "discatsharp",
+      "matchPackageNames": [
+        "/^DisCatSharp/"
+      ]
     },
     {
       "groupName": "Npgsql packages",
-      "matchPackagePatterns": ["^Npgsql"],
-      "groupSlug": "npgsql"
+      "groupSlug": "npgsql",
+      "matchPackageNames": [
+        "/^Npgsql/"
+      ]
     },
     {
       "groupName": "Serilog packages",
-      "matchPackagePatterns": ["^Serilog"],
-      "groupSlug": "serilog"
+      "groupSlug": "serilog",
+      "matchPackageNames": [
+        "/^Serilog/"
+      ]
     }
   ]
 }
