@@ -31,7 +31,7 @@ public sealed class RemoveAntragssperreCommand : ApplicationCommandsModule
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent("Prüfe, ob bereits eine Antragssperre existiert..."));
         var existingSperre = await context.Antragssperren
-            .FirstOrDefaultAsync(a => a.UserId == (long)ctx.User.Id);
+            .FirstOrDefaultAsync(a => a.UserId == (long)user.Id);
         if (existingSperre == null)
         {
             await ctx.EditResponseAsync(
