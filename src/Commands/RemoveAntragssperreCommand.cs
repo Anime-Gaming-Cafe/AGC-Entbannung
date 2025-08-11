@@ -43,6 +43,6 @@ public sealed class RemoveAntragssperreCommand : ApplicationCommandsModule
         existingSperre.ExpiresAt = 0;
         await context.SaveChangesAsync();
         await ctx.EditResponseAsync(
-            new DiscordWebhookBuilder().WithContent("Die Antragssperre wurde erfolgreich entfernt! Der User wird innerhalb einer Minute automatisch freigegeben."));
+            new DiscordWebhookBuilder().WithContent("Die Antragssperre wurde erfolgreich entfernt! Der User wird innerhalb der nächsten 5 automatisch freigegeben."));
     }
 }
