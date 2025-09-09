@@ -14,8 +14,8 @@
         <PackageReference Include="DisCatSharp.ApplicationCommands" Version="10.6.7" />
         <PackageReference Include="DisCatSharp.Common" Version="10.6.7" />
         <PackageReference Include="DisCatSharp.Interactivity" Version="10.6.7" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="Serilog" Version="4.3.0"/>
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2"/>
