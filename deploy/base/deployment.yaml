@@ -20,7 +20,8 @@ spec:
           image: anime-gaming-cafe/agc-entbannung:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - name: http-metrics
+              containerPort: 8080
           livenessProbe:
             httpGet:
               path: /healthz/live
