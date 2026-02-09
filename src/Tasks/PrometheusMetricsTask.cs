@@ -1,4 +1,5 @@
-﻿using AGC_Entbannungssystem.Helpers;
+﻿using System.Text.RegularExpressions;
+using AGC_Entbannungssystem.Helpers;
 using AGC_Entbannungssystem.Services;
 using DisCatSharp;
 using Prometheus;
@@ -9,7 +10,7 @@ namespace AGC_Entbannungssystem.Tasks;
 public static class PrometheusMetricsTask
 {
     private static readonly Gauge GaugeBannedUsers = Metrics.CreateGauge("agc_unbans_blocked_users", "Anzahl aktuell gesperrter User (Sperre aktiv + PermaBlock)");
-    private static readonly Gauge GaugeOpenTickets = Metrics.CreateGauge("agc_unbans_open_tickets_total", "Anzahl offener Entbannungs-Tickets (antrag-* Channels)");
+    private static readonly Gauge GaugeOpenTickets = Metrics.CreateGauge("agc_unbans_open_tickets_total", "Anzahl offener Entbannungs-Tickets (antrag-XXXX Channels)");
 
     public static async Task Run(DiscordClient client)
     {
@@ -34,7 +35,7 @@ public static class PrometheusMetricsTask
                         var guild = await client.GetGuildAsync(unbanServerId);
                         if (guild != null)
                         {
-                            openTicketsCount = guild.Channels.Values.Count(c => c.Name.StartsWith("antrag-"));
+                            openTicketsCount = guild.Channels.Values.Count(c => Regex.IsMatch(c.Name, @"^antrag-\d{4}$"));
                         }
                     }
                     catch (Exception ex)
