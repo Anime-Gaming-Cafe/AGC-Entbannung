@@ -110,7 +110,7 @@ jobs:
 
       - name: Trigger Docker Image Publish (workflow_dispatch)
         if: ${{ steps.taggen.outputs.new_tag != '' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
