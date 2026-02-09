@@ -1,0 +1,13 @@
+﻿apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: agc-entbannung
+  namespace: agc
+spec:
+  podMetricsEndpoints:
+    - port: "8080"
+      path: /metrics
+      interval: 15s
+  selector:
+    matchLabels:
+      app: agc-entbannung

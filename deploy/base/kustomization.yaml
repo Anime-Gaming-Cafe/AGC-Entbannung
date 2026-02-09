@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: agc
 resources:
   - deployment.yaml
+  - podscrape.yaml
 images:
   - name: anime-gaming-cafe/agc-entbannung
     newName: ghcr.io/anime-gaming-cafe/agc-entbannung
