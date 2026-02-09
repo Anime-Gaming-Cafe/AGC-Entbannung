@@ -187,10 +187,9 @@ internal sealed class Program
         app.MapHealthChecks("/healthz/ready");
         app.MapMetrics();
 
-        _ = app.RunAsync();
-
         var client = app.Services.GetRequiredService<DiscordClient>();
         var serviceProvider = app.Services;
+        CurrentApplicationData.Client = client;
 
         ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
         _ = PrometheusMetricsTask.Run(client);
@@ -220,13 +219,19 @@ internal sealed class Program
         await client.ConnectAsync(new DiscordActivity("Verwaltung der Entbannungen",
             ActivityType.Custom), UserStatus.Idle);
 
-        CurrentApplicationData.Client = client;
         CurrentApplicationData.BotApplication = client.CurrentUser;
 
         _ = RunTasks(client);
 
+        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+        lifetime.ApplicationStopping.Register(() =>
+        {
+            logger.Information("SIGTERM received, disconnecting Discord client...");
+            client.DisconnectAsync().GetAwaiter().GetResult();
+            logger.Information("Discord client disconnected.");
+        });
 
-        await Task.Delay(-1);
+        await app.RunAsync();
     }
 
     private static async Task RunTasks(DiscordClient client)
