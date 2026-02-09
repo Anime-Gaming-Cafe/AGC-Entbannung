@@ -21,6 +21,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Prometheus;
 using Serilog;
@@ -173,18 +174,34 @@ internal sealed class Program
         builder.Services.AddSingleton(new DiscordClient(config));
 
         builder.Services.AddHealthChecks()
+            .AddCheck("Liveness", () => HealthCheckResult.Healthy(), tags: ["live"])
             .AddCheck("Discord-Connection", () =>
             {
                 var client = CurrentApplicationData.Client;
-                if (client == null) return HealthCheckResult.Unhealthy("DiscordClient not initialized");
-                return client.Ping > 0 ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy("Discord not connected (Ping is 0)");
-            });
+                if (client == null)
+                {
+                    return HealthCheckResult.Unhealthy("DiscordClient not initialized");
+                }
+
+                if (!CurrentApplicationData.isReady)
+                {
+                    return HealthCheckResult.Degraded("DiscordClient is not yet ready");
+                }
+
+                return client.Ping >= 0 ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy($"Discord not connected (Ping: {client.Ping})");
+            }, tags: ["ready"]);
 
         var app = builder.Build();
 
         app.UseHttpMetrics();
-        app.MapHealthChecks("/healthz/live");
-        app.MapHealthChecks("/healthz/ready");
+        app.MapHealthChecks("/healthz/live", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("live")
+        });
+        app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("ready")
+        });
         app.MapMetrics();
 
         var client = app.Services.GetRequiredService<DiscordClient>();
@@ -192,7 +209,7 @@ internal sealed class Program
         CurrentApplicationData.Client = client;
 
         ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
-        _ = PrometheusMetricsTask.Run(client);
+
 
 
         client.ClientErrored += Discord_ClientErrored;
@@ -237,6 +254,7 @@ internal sealed class Program
     private static async Task RunTasks(DiscordClient client)
     {
         await Task.Delay(TimeSpan.FromSeconds(10));
+        _ = PrometheusMetricsTask.Run(client);
         _ = CheckTeamRole.Run(client);
         _ = CheckExpiredVotes.Run(client);
         _ = CheckExpiredBlock.Run(client);
