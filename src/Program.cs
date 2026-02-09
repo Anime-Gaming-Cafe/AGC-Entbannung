@@ -165,7 +165,9 @@ internal sealed class Program
 
         if (!string.IsNullOrEmpty(proxyHost) && !string.IsNullOrEmpty(proxyPort) && int.TryParse(proxyPort, out int port))
         {
-            config.Proxy = new System.Net.WebProxy(proxyHost, port);
+            // substitue the url with /api/v10
+            string url = $"http://{proxyHost}:{port}/api/v10";
+            config.Proxy = new System.Net.WebProxy(url);
         }
 
         builder.Services.AddSingleton(new DiscordClient(config));
