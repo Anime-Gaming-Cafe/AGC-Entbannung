@@ -6,8 +6,8 @@ metadata:
   annotations:
     argocd-image-updater.argoproj.io/image-list: agc=ghcr.io/anime-gaming-cafe/agc-entbannung:latest
     argocd-image-updater.argoproj.io/agc.update-strategy: latest
-    argocd-image-updater.argoproj.io/write-back-method: git
-    argocd-image-updater.argoproj.io/git-branch: main
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd-image-updater.argoproj.io/git-branch: master
 spec:
   project: default
   source:

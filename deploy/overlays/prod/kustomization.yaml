@@ -4,6 +4,6 @@ namespace: agc
 resources:
   - ../../base
 images:
-  - name: your-registry/agc-entbannung
+  - name: anime-gaming-cafe/agc-entbannung
     newName: ghcr.io/anime-gaming-cafe/agc-entbannung
     newTag: latest

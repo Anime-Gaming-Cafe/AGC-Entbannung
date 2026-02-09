@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: your-registry/agc-entbannung:latest 
+          image: anime-gaming-cafe/agc-entbannung:latest
           imagePullPolicy: Always
           env:
             - name: DOTNET_EnableDiagnostics
