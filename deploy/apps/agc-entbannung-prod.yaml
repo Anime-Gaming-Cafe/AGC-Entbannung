@@ -8,6 +8,7 @@ metadata:
     argocd-image-updater.argoproj.io/agc.update-strategy: latest
     argocd-image-updater.argoproj.io/write-back-method: argocd
     argocd-image-updater.argoproj.io/git-branch: master
+    argocd.argoproj.io/sync-options: Delete=false
 spec:
   project: default
   source:
@@ -21,5 +22,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
