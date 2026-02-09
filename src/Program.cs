@@ -193,6 +193,50 @@ internal sealed class Program
 
         var app = builder.Build();
 
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var client = app.Services.GetRequiredService<DiscordClient>();
+                var serviceProvider = app.Services;
+                CurrentApplicationData.Client = client;
+
+                ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
+
+                client.ClientErrored += Discord_ClientErrored;
+                client.UseInteractivity(new InteractivityConfiguration
+                {
+                    Timeout = TimeSpan.FromMinutes(5),
+                    AckPaginationButtons = true,
+                    PaginationBehaviour = PaginationBehaviour.Ignore
+                });
+
+                var slash = client.UseApplicationCommands(new ApplicationCommandsConfiguration
+                {
+                    ServiceProvider = serviceProvider,
+                    EnableDefaultHelp = false,
+                    CheckAllGuilds = true, DebugStartup = true
+                });
+                slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
+                client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
+                slash.SlashCommandErrored += Discord_SlashCommandErrored;
+
+
+                client.Ready += Discord_Ready;
+
+                await client.ConnectAsync(new DiscordActivity("Verwaltung der Entbannungen",
+                    ActivityType.Custom), UserStatus.Idle);
+
+                CurrentApplicationData.BotApplication = client.CurrentUser;
+
+                _ = RunTasks(client);
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Failed to start Discord client");
+            }
+        });
+
         app.UseHttpMetrics();
         app.MapHealthChecks("/healthz/live", new HealthCheckOptions
         {
@@ -204,47 +248,11 @@ internal sealed class Program
         });
         app.MapMetrics();
 
-        var client = app.Services.GetRequiredService<DiscordClient>();
-        var serviceProvider = app.Services;
-        CurrentApplicationData.Client = client;
-
-        ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
-
-
-
-        client.ClientErrored += Discord_ClientErrored;
-        client.UseInteractivity(new InteractivityConfiguration
-        {
-            Timeout = TimeSpan.FromMinutes(5),
-            AckPaginationButtons = true,
-            PaginationBehaviour = PaginationBehaviour.Ignore
-        });
-
-        var slash = client.UseApplicationCommands(new ApplicationCommandsConfiguration
-        {
-            ServiceProvider = serviceProvider,
-            EnableDefaultHelp = false,
-            CheckAllGuilds = true, DebugStartup = true
-        });
-        slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
-        client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
-        slash.SlashCommandErrored += Discord_SlashCommandErrored;
-
-
-        client.Ready += Discord_Ready;
-
-        await client.ConnectAsync(new DiscordActivity("Verwaltung der Entbannungen",
-            ActivityType.Custom), UserStatus.Idle);
-
-        CurrentApplicationData.BotApplication = client.CurrentUser;
-
-        _ = RunTasks(client);
-
         var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
         lifetime.ApplicationStopping.Register(() =>
         {
             logger.Information("SIGTERM received, disconnecting Discord client...");
-            client.DisconnectAsync().GetAwaiter().GetResult();
+            CurrentApplicationData.Client?.DisconnectAsync().GetAwaiter().GetResult();
             logger.Information("Discord client disconnected.");
         });
 
