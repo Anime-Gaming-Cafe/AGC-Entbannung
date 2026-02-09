@@ -130,7 +130,7 @@ jobs:
 
             const isNightly = "${{ github.event.inputs.nightly }}" === "true";
             const taggenOutput = `${{ steps.taggen.outputs.new_tag }}`;
-            const tag = isNightly ? "main" : taggenOutput;
+            const tag = isNightly ? "master" : taggenOutput;
             
             if (!tag) {
                 core.setFailed("No tag or branch to dispatch to.");
