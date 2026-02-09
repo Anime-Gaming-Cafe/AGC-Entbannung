@@ -57,10 +57,10 @@ spec:
               subPath: config.json
           resources:
             requests:
-              cpu: "100m"
+              cpu: "300m"
               memory: "512Mi"
             limits:
-              cpu: "500m"
+              cpu: "600m"
               memory: "1Gi"
       volumes:
         - name: cfg
