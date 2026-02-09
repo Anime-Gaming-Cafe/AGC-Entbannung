@@ -2,7 +2,6 @@
 kind: Kustomization
 namespace: agc
 resources:
-  - namespace.yaml
   - deployment.yaml
 images:
   - name: anime-gaming-cafe/agc-entbannung
