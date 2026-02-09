@@ -172,6 +172,7 @@ internal sealed class Program
         }
 
         builder.Services.AddSingleton(new DiscordClient(config));
+        builder.Services.AddHostedService<DiscordBotService>();
 
         builder.Services.AddHealthChecks()
             .AddCheck("Liveness", () => HealthCheckResult.Healthy(), tags: ["live"])
@@ -193,50 +194,6 @@ internal sealed class Program
 
         var app = builder.Build();
 
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var client = app.Services.GetRequiredService<DiscordClient>();
-                var serviceProvider = app.Services;
-                CurrentApplicationData.Client = client;
-
-                ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
-
-                client.ClientErrored += Discord_ClientErrored;
-                client.UseInteractivity(new InteractivityConfiguration
-                {
-                    Timeout = TimeSpan.FromMinutes(5),
-                    AckPaginationButtons = true,
-                    PaginationBehaviour = PaginationBehaviour.Ignore
-                });
-
-                var slash = client.UseApplicationCommands(new ApplicationCommandsConfiguration
-                {
-                    ServiceProvider = serviceProvider,
-                    EnableDefaultHelp = false,
-                    CheckAllGuilds = true, DebugStartup = true
-                });
-                slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
-                client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
-                slash.SlashCommandErrored += Discord_SlashCommandErrored;
-
-
-                client.Ready += Discord_Ready;
-
-                await client.ConnectAsync(new DiscordActivity("Verwaltung der Entbannungen",
-                    ActivityType.Custom), UserStatus.Idle);
-
-                CurrentApplicationData.BotApplication = client.CurrentUser;
-
-                _ = RunTasks(client);
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Failed to start Discord client");
-            }
-        });
-
         app.UseHttpMetrics();
         app.MapHealthChecks("/healthz/live", new HealthCheckOptions
         {
@@ -248,78 +205,7 @@ internal sealed class Program
         });
         app.MapMetrics();
 
-        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-        lifetime.ApplicationStopping.Register(() =>
-        {
-            logger.Information("SIGTERM received, disconnecting Discord client...");
-            CurrentApplicationData.Client?.DisconnectAsync().GetAwaiter().GetResult();
-            logger.Information("Discord client disconnected.");
-        });
-
         await app.RunAsync();
-    }
-
-    private static async Task RunTasks(DiscordClient client)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(10));
-        _ = PrometheusMetricsTask.Run(client);
-        _ = CheckTeamRole.Run(client);
-        _ = CheckExpiredVotes.Run(client);
-        _ = CheckExpiredBlock.Run(client);
-        _ = FillAutocompletions.Run(client);
-        _ = UpdateVoteMessages.Run(client);
-    }
-
-
-    private static async Task Discord_Ready(DiscordClient sender, ReadyEventArgs e)
-    {
-        CurrentApplicationData.isReady = true;
-    }
-
-    private static async Task Discord_SlashCommandErrored(ApplicationCommandsExtension sender,
-        SlashCommandErrorEventArgs e)
-    {
-        if (e.Exception is SlashExecutionChecksFailedException)
-        {
-            var ex = (SlashExecutionChecksFailedException)e.Exception;
-            if (ex.FailedChecks.Any(x => x is ApplicationCommandRequireUserPermissionsAttribute))
-            {
-                await e.Context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent("Du hast keine Berechtigung :3").AsEphemeral());
-                e.Handled = true;
-                return;
-            }
-
-            e.Handled = true;
-        }
-    }
-
-
-    private static Task Discord_ClientErrored(DiscordClient sender, ClientErrorEventArgs e)
-    {
-        if (e.Exception is SlashExecutionChecksFailedException)
-        {
-            e.Handled = true;
-            return Task.CompletedTask;
-        }
-
-        if (e.Exception is NotFoundException)
-        {
-            e.Handled = true;
-            return Task.CompletedTask;
-        }
-
-        if (e.Exception is BadRequestException)
-        {
-            e.Handled = true;
-            return Task.CompletedTask;
-        }
-
-        ErrorReporting.SendErrorToDev(sender, sender.CurrentUser, e.Exception).GetAwaiter().GetResult();
-
-        sender.Logger.LogError($"Exception occured: {e.Exception.GetType()}: {e.Exception.Message}");
-        sender.Logger.LogError($"Stacktrace: {e.Exception.GetType()}: {e.Exception.StackTrace}");
-        return Task.CompletedTask;
     }
 }
 
