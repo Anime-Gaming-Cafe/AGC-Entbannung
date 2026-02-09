@@ -17,8 +17,13 @@ using DisCatSharp.Interactivity;
 using DisCatSharp.Interactivity.Enums;
 using DisCatSharp.Interactivity.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
+using Serilog.Events;
 using ILogger = Serilog.ILogger;
 
 #endregion
@@ -113,10 +118,21 @@ internal sealed class Program
 
     private static async Task MainAsync()
     {
+        var builder = WebApplication.CreateBuilder();
+
         var logger = Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("DisCatSharp", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Routing.EndpointMiddleware", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Diagnostics.HealthChecks", LogEventLevel.Warning)
             .WriteTo.Console()
             .CreateLogger();
+
+
+        
+        builder.Host.UseSerilog(logger);
+        
         logger.Information("Starting AGC_Entbannungssystem...");
 
         string DcApiToken = "";
@@ -131,20 +147,35 @@ internal sealed class Program
             Environment.Exit(41);
         }
 
-        IServiceProvider serviceProvider = new ServiceCollection()
-            .AddLogging(logging => { logging.AddSerilog(logger); }).BuildServiceProvider();
-
-        var client = new DiscordClient(new DiscordConfiguration
+        builder.Services.AddSingleton(new DiscordClient(new DiscordConfiguration
         {
             Token = DcApiToken,
             TokenType = TokenType.Bot,
             AutoReconnect = true,
             Intents = DiscordIntents.All,
             DeveloperUserId = GlobalProperties.BotOwnerId,
-            MinimumLogLevel = LogLevel.Debug,
-            ServiceProvider = serviceProvider,
+            MinimumLogLevel = LogLevel.Information,
+            DisableUpdateCheck = true,
             ShowReleaseNotesInUpdateCheck = false
-        });
+        }));
+
+        builder.Services.AddHealthChecks()
+            .AddCheck("Discord-Connection", () =>
+            {
+                var client = CurrentApplicationData.Client;
+                if (client == null) return HealthCheckResult.Unhealthy("DiscordClient not initialized");
+                return client.Ping > 0 ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy("Discord not connected (Ping is 0)");
+            });
+
+        var app = builder.Build();
+
+        app.MapHealthChecks("/healthz/live");
+        app.MapHealthChecks("/healthz/ready");
+
+        _ = app.RunAsync();
+
+        var client = app.Services.GetRequiredService<DiscordClient>();
+        var serviceProvider = app.Services;
 
 
         client.ClientErrored += Discord_ClientErrored;
