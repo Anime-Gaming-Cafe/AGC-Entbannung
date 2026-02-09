@@ -54,10 +54,10 @@ jobs:
             type=raw,value=dev-${{ github.sha }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'false' }}
             type=sha,format=long
             type=ref,event=branch
-            labels: |
-              org.opencontainers.image.title=${{ github.event.repository.name }}
-              org.opencontainers.image.revision=${{ github.sha }}
-              org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
