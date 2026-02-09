@@ -1,0 +1,25 @@
+﻿apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: agc-entbannung-prod
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: agc=ghcr.io/anime-gaming-cafe/agc-entbannung:latest
+    argocd-image-updater.argoproj.io/agc.update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:Anime-Gaming-Cafe/AGC-Entbannung.git
+    targetRevision: main
+    path: deploy/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: agc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

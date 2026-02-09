@@ -1,0 +1,39 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agc-entbannung
+  namespace: agc
+  labels:
+    app: agc-entbannung
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agc-entbannung
+  template:
+    metadata:
+      labels:
+        app: agc-entbannung
+    spec:
+      containers:
+        - name: app
+          image: your-registry/agc-entbannung:latest 
+          imagePullPolicy: Always
+          env:
+            - name: DOTNET_EnableDiagnostics
+              value: "0"
+          volumeMounts:
+            - name: cfg
+              mountPath: /app/config.json
+              subPath: config.json
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: cfg
+          secret:
+            secretName: agc-entbannung-prod-config

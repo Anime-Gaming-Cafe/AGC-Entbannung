@@ -1,0 +1,9 @@
+﻿apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: agc
+resources:
+  - ../../base
+images:
+  - name: your-registry/agc-entbannung
+    newName: ghcr.io/anime-gaming-cafe/agc-entbannung
+    newTag: latest
