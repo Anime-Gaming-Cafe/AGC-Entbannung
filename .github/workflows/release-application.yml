@@ -121,30 +121,3 @@ jobs:
             AGC_Entbannung_linux_*.zip
             AGC_Entbannung_win_*.zip
 
-      - name: Trigger Docker Image Publish (workflow_dispatch)
-        uses: actions/github-script@v8
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await new Promise(r => setTimeout(r, 5000));
-
-            const isNightly = "${{ github.event.inputs.nightly }}" === "true";
-            const taggenOutput = `${{ steps.taggen.outputs.new_tag }}`;
-            const tag = isNightly ? "master" : taggenOutput;
-            
-            if (!tag) {
-                core.setFailed("No tag or branch to dispatch to.");
-                return;
-            }
-
-            core.info(`Dispatching docker-image-publish.yml on ref: ${tag}, nightly: ${isNightly}`);
-
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'docker-image-publish.yml',
-              ref: tag,
-              inputs: {
-                nightly: isNightly
-              }
-            });

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       nightly:
-        description: 'Nightly?'
+        description: 'Nightly build?'
         type: boolean
         default: false
 
@@ -34,29 +34,28 @@ jobs:
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER}/${NAME}"
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${OWNER}/${NAME}" >> "$GITHUB_OUTPUT"
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ steps.prep.outputs.image }}
+          images: ${{ steps.prep.outputs.image }}
           tags: |
+            # Release Tags (aktiv wenn ein Release publiziert wird)
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' }}
             type=raw,value=latest,enable=${{ github.event_name == 'release' }}
             type=raw,value=release,enable=${{ github.event_name == 'release' }}
-            type=raw,value=nightly,enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'true' }}
-            type=raw,value=nightly-${{ github.sha }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'true' }}
-            type=raw,value=edge,enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'false' }}
-            type=raw,value=dev-${{ github.sha }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.nightly == 'false' }}
+            
+            # Nightly Tags (aktiv bei manuellem Dispatch mit nightly=true)
+            type=raw,value=nightly,enable=${{ github.event.inputs.nightly == 'true' }}
+            type=raw,value=nightly-${{ github.sha }},enable=${{ github.event.inputs.nightly == 'true' }}
+            
+            # Entwickler Tags
             type=sha,format=long
             type=ref,event=branch
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
-            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Build and push
