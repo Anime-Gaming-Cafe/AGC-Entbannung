@@ -6,8 +6,11 @@ metadata:
 spec:
   podMetricsEndpoints:
     - port: http-metrics
+      scheme: http
       path: /metrics
       interval: 15s
+  podTargetLabels:
+    - app
   selector:
     matchLabels:
       app: agc-entbannung
