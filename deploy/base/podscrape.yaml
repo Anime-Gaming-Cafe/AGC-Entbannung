@@ -5,7 +5,7 @@ metadata:
   namespace: agc
 spec:
   podMetricsEndpoints:
-    - port: "8080"
+    - port: 8080
       path: /metrics
       interval: 15s
   selector:
