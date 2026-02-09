@@ -1,0 +1,14 @@
+﻿apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: agc-config
+  namespace: argocd
+spec:
+  namespace: argocd
+  applicationRefs:
+    - namePattern: "agc-entbannung"
+      images:
+        - alias: "agc"
+          imageName: "ghcr.io/anime-gaming-cafe/agc-entbannung:latest"
+          commonUpdateSettings:
+            updateStrategy: "latest"
