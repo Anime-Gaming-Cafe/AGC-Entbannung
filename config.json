@@ -18,7 +18,9 @@
     "SperreInfoChannelId": "ChannelID",
     "BearbeitetCategoryId": "CategoryID",
     "BackupTranscriptPath": "Drive Path",
-    "BackupTranscriptUrl": "Drive URL"
+    "BackupTranscriptUrl": "Drive URL",
+    "RestProxyHost": "",
+    "RestProxyPort": ""
   },
   "ErrorTracking": {
     "ErrorTrackingEnabled": "false",

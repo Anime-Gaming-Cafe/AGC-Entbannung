@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Prometheus;
 using Serilog;
 using Serilog.Events;
 using ILogger = Serilog.ILogger;
@@ -147,7 +148,7 @@ internal sealed class Program
             Environment.Exit(41);
         }
 
-        builder.Services.AddSingleton(new DiscordClient(new DiscordConfiguration
+        var config = new DiscordConfiguration
         {
             Token = DcApiToken,
             TokenType = TokenType.Bot,
@@ -157,7 +158,17 @@ internal sealed class Program
             MinimumLogLevel = LogLevel.Information,
             DisableUpdateCheck = true,
             ShowReleaseNotesInUpdateCheck = false
-        }));
+        };
+
+        var proxyHost = BotConfigurator.GetConfig("MainConfig", "RestProxyHost");
+        var proxyPort = BotConfigurator.GetConfig("MainConfig", "RestProxyPort");
+
+        if (!string.IsNullOrEmpty(proxyHost) && !string.IsNullOrEmpty(proxyPort) && int.TryParse(proxyPort, out int port))
+        {
+            config.Proxy = new System.Net.WebProxy(proxyHost, port);
+        }
+
+        builder.Services.AddSingleton(new DiscordClient(config));
 
         builder.Services.AddHealthChecks()
             .AddCheck("Discord-Connection", () =>
@@ -169,13 +180,18 @@ internal sealed class Program
 
         var app = builder.Build();
 
+        app.UseHttpMetrics();
         app.MapHealthChecks("/healthz/live");
         app.MapHealthChecks("/healthz/ready");
+        app.MapMetrics();
 
         _ = app.RunAsync();
 
         var client = app.Services.GetRequiredService<DiscordClient>();
         var serviceProvider = app.Services;
+
+        ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
+        _ = PrometheusMetricsTask.Run(client);
 
 
         client.ClientErrored += Discord_ClientErrored;
@@ -192,7 +208,6 @@ internal sealed class Program
             EnableDefaultHelp = false,
             CheckAllGuilds = true, DebugStartup = true
         });
-        ulong unbanServerId = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "UnbanServerId"));
         slash.RegisterGuildCommands(Assembly.GetExecutingAssembly(), unbanServerId);
         client.RegisterEventHandlers(Assembly.GetExecutingAssembly());
         slash.SlashCommandErrored += Discord_SlashCommandErrored;
