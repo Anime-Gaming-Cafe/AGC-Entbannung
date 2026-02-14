@@ -8,7 +8,7 @@ spec:
   applicationRefs:
     - namePattern: "agc-entbannung"
       images:
-        - alias: "agc"
+        - alias: "agc-entbannung"
           imageName: "ghcr.io/anime-gaming-cafe/agc-entbannung:latest"
           commonUpdateSettings:
             updateStrategy: "latest"
