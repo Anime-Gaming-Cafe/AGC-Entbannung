@@ -363,8 +363,23 @@ public class onComponentInteraction : ApplicationCommandsModule
                 var member_ = await e.Guild.GetMemberAsync(e.User.Id);
                 var appealrole_ = e.Guild.GetRole(ulong.Parse(BotConfigurator.GetConfig("MainConfig", "AppealRoleId")));
 
+                bool bypassReadCheck = false;
+                try
+                {
+                    DiscordGuild mainGuild_ = await client.GetGuildAsync(GlobalProperties.MainGuildId);
+                    var be_ = await mainGuild_.GetBanAsync(e.User.Id);
+                    var banreason_ = (be_.Reason ?? "").ToLower();
+                    bypassReadCheck = banreason_.Contains("scam") && banreason_.Contains("entbannung");
+                }
+                catch (NotFoundException)
+                {
+                }
+                catch (Exception exception)
+                {
+                    client.Logger.LogError($"Exception occured: {exception.GetType()}: {exception.Message}");
+                }
 
-                if (timediff < 15 && !member_.Roles.Contains(appealrole_))
+                if (timediff < 15 && !member_.Roles.Contains(appealrole_) && !bypassReadCheck)
                 {
                     var embed = new DiscordEmbedBuilder();
                     embed.WithTitle("Antrag abgelehnt!");
