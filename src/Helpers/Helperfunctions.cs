@@ -37,6 +37,81 @@ public static class Helperfunctions
         return $"<@&{BotConfigurator.GetConfig("MainConfig", "PingRoleId")}>";
     }
 
+    public static async Task<ulong?> GetTicketUserIdAsync(DiscordChannel channel)
+    {
+        try
+        {
+            var messages = await channel.GetMessagesAfterAsync(channel.Id, 1);
+            var firstMessage = messages?.FirstOrDefault();
+            if (firstMessage == null) return null;
+            return firstMessage.MentionedUsers?.FirstOrDefault()?.Id;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static async Task<bool> TryAddAntragsverlaufAsync(
+        DiscordClient client,
+        bool entbannt,
+        DiscordUser modUser,
+        string antragsnummer,
+        DiscordUser targetUser,
+        string grund)
+    {
+        try
+        {
+            await using var context = AgcDbContextFactory.CreateDbContext();
+
+            var userIdLong = (long)targetUser.Id;
+            var existing = await context.Antragsverlauf
+                .FirstOrDefaultAsync(a => a.AntragsId == antragsnummer && a.UserId == userIdLong);
+            if (existing != null) return false;
+
+            var antragsverlauf = new Antragsverlauf
+            {
+                AntragsId = antragsnummer,
+                UserId = userIdLong,
+                ModId = (long)modUser.Id,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Entbannt = entbannt,
+                Reason = grund
+            };
+
+            context.Antragsverlauf.Add(antragsverlauf);
+            await context.SaveChangesAsync();
+
+            var eb = new DiscordEmbedBuilder();
+            if (entbannt)
+            {
+                eb.WithTitle("Antrag wurde angenommen!");
+                eb.WithColor(DiscordColor.Green);
+            }
+            else
+            {
+                eb.WithTitle("Antrag wurde abgelehnt!");
+                eb.WithColor(DiscordColor.Red);
+            }
+
+            eb.WithDescription(
+                $"**Status:** {BoolToEmoji(entbannt)}\n**Bearbeitet von:** {modUser.Mention} ({modUser.Id}) \n**Antragsnummer:** {antragsnummer}\n**Betroffener User:** {targetUser.Mention} ({targetUser.Id})\n**Grund:** {grund}");
+            eb.WithFooter("Entbannungssystem", modUser.AvatarUrl);
+            eb.WithTimestamp(DateTimeOffset.Now);
+
+            var chid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "HistoryChannelId"));
+            var ch = await client.GetChannelAsync(chid);
+            await ch.SendMessageAsync(eb);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            try { await ErrorReporting.SendErrorToDev(client, client.CurrentUser, ex); } catch { }
+            return false;
+        }
+    }
+
     public static async Task addVoteToAntrag(ComponentInteractionCreateEventArgs interaction, bool positiveVote)
     {
         var existingVote = await UserHasVoted(interaction);

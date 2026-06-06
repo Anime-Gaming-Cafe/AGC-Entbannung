@@ -92,5 +92,20 @@ public class AntragSperre : ApplicationCommandsModule
         ulong infochannelid = ulong.Parse(BotConfigurator.GetConfig("MainConfig", "SperreInfoChannelId"));
         DiscordChannel ichan = ctx.Guild.GetChannel(infochannelid);
         await ichan.SendMessageAsync(embed);
+
+        try
+        {
+            await Helperfunctions.TryAddAntragsverlaufAsync(
+                ctx.Client,
+                entbannt: false,
+                modUser: ctx.User,
+                antragsnummer: antragsnummer,
+                targetUser: user,
+                grund: reason);
+        }
+        catch (Exception e)
+        {
+            ctx.Client.Logger.LogError(e, "Auto-Antragshistorie-Eintrag nach /sperre fehlgeschlagen");
+        }
     }
 }

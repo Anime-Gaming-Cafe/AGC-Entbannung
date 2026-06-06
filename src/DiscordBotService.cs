@@ -88,6 +88,7 @@ public class DiscordBotService : IHostedService
         _ = CheckExpiredBlock.Run(client);
         _ = FillAutocompletions.Run(client);
         _ = UpdateVoteMessages.Run(client);
+        _ = CheckInactiveTickets.Run(client);
     }
 
     private async Task Discord_Ready(DiscordClient sender, ReadyEventArgs e)

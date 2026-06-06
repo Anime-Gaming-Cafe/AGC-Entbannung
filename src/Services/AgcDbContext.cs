@@ -14,6 +14,7 @@ public class AgcDbContext : DbContext
     public DbSet<Flag> Flags { get; set; }
     public DbSet<PermaBlock> PermaBlocks { get; set; }
     public DbSet<Autocompletion> Autocompletions { get; set; }
+    public DbSet<DisabledAutomation> DisabledAutomations { get; set; }
 
     public AgcDbContext(DbContextOptions<AgcDbContext> options) : base(options)
     {
@@ -73,6 +74,13 @@ public class AgcDbContext : DbContext
         modelBuilder.Entity<Autocompletion>(entity =>
         {
             entity.HasKey(e => new { e.Type, e.Data });
+        });
+
+        // Configure DisabledAutomation - channel_id is the primary key
+        modelBuilder.Entity<DisabledAutomation>(entity =>
+        {
+            entity.HasKey(e => e.ChannelId);
+            entity.Property(e => e.ChannelId).ValueGeneratedNever();
         });
     }
 }
