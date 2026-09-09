@@ -369,7 +369,7 @@ public class onComponentInteraction : ApplicationCommandsModule
                     DiscordGuild mainGuild_ = await client.GetGuildAsync(GlobalProperties.MainGuildId);
                     var be_ = await mainGuild_.GetBanAsync(e.User.Id);
                     var banreason_ = (be_.Reason ?? "").ToLower();
-                    bypassReadCheck = banreason_.Contains("scam") && banreason_.Contains("entbannung");
+                    bypassReadCheck = banreason_.Contains("scam") || banreason_.Contains("entbannung");
                 }
                 catch (NotFoundException)
                 {
